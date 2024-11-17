@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Countdown Timer with Gradient Card</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      /* Fullscreen video background */
+      .video-background {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        min-width: 100%;
+        min-height: 100%;
+        z-index: -1;
+      }
+
+      /* Semi-transparent overlay for contrast */
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); /* Dark overlay to make text readable */
+      }
+
+      .timer-container {
+        position: relative;
+        z-index: 2; /* Bring the timer in front of the video and overlay */
+        padding: 40px;
+        text-align: center;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+
+      /* Card with gradient background and shadow */
+      .card {
+        background: linear-gradient(
+          135deg,
+          rgba(58, 123, 213, 0.8),
+          rgba(0, 210, 255, 0.8)
+        ); /* Gradient background */
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Add shadow to the card */
+        color: white; /* White text for better readability */
+      }
+
+      .card-body {
+        padding: 20px;
+      }
+
+      .timer {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        font-size: 2.5rem;
+      }
+
+      .timer div {
+        text-align: center;
+      }
+
+      .timer div span {
+        display: block;
+        font-size: 2rem;
+      }
+
+      .input-container {
+        margin-bottom: 20px;
+      }
+
+      label,
+      input {
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Background Video -->
+    <video autoplay muted loop class="video-background">
+      <source src="https://www.w3schools.com/howto/rain.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+
+    <!-- Semi-transparent Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Timer Content wrapped in a card -->
+    <div class="timer-container">
+      <div class="card">
+        <div class="card-body">
+          <h1 class="mb-4">Countdown Timer</h1>
+
+          <!-- Custom input fields for start and finish times -->
+          <div class="input-container">
+            <label for="startTime" class="form-label">Start Time:</label>
+            <input type="datetime-local" id="startTime" class="form-control" />
+            <label for="finishTime" class="form-label mt-2"
+              >Expected Finish Time:</label
+            >
+            <input type="datetime-local" id="finishTime" class="form-control" />
+            <button class="btn btn-light mt-3" onclick="startCountdown()">
+              Start Countdown
+            </button>
+          </div>
+
+          <!-- Timer Display -->
+          <div class="timer mt-4">
+            <div><span id="minutes">0</span> Minutes</div>
+            <div><span id="seconds">0</span> Seconds</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let timerInterval;
+
+      function startCountdown() {
+        // Clear previous interval if exists
+        if (timerInterval) clearInterval(timerInterval);
+
+        // Get user input for start and finish times
+        const startTimeInput = document.getElementById("startTime").value;
+        const finishTimeInput = document.getElementById("finishTime").value;
+
+        // Convert to Date objects
+        const startTime = new Date(startTimeInput).getTime();
+        const finishTime = new Date(finishTimeInput).getTime();
+
+        // If inputs are invalid, show an alert
+        if (!startTimeInput || !finishTimeInput || finishTime <= startTime) {
+          alert(
+            "Please enter valid start and finish times where finish time is after the start time."
+          );
+          return;
+        }
+
+        // Set countdown duration in milliseconds
+        const countdownDuration = finishTime - startTime;
+
+        // Update the countdown every 1 second
+        timerInterval = setInterval(function () {
+          const now = new Date().getTime();
+          const timeLeft = finishTime - now;
+
+          // Calculate the time left for minutes and seconds
+          const minutes = Math.floor(
+            (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+          // Display the result in the appropriate elements
+          document.getElementById("minutes").innerHTML =
+            minutes >= 0 ? minutes : 0;
+          document.getElementById("seconds").innerHTML =
+            seconds >= 0 ? seconds : 0;
+
+          // If the countdown is finished, show "EXPIRED"
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            document.querySelector(".timer").innerHTML = "EXPIRED";
+          }
+        }, 1000);
+      }
+    </script>
+  </body>
+</html>
