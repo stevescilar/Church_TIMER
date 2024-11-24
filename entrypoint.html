@@ -25,6 +25,13 @@
         box-shadow: 0 8px 16px rgba(36, 0, 238, 0.3);
         text-align: center;
       }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
     </style>
   </head>
   <body>
@@ -38,6 +45,12 @@
         style="max-width: 200px; margin: 0 auto"
       />
       <button class="btn btn-light" onclick="startTimer()">Start Timer</button>
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="setDuration(5)">5 mins</button>
+        <button class="btn btn-primary" onclick="setDuration(10)">10 mins</button>
+        <button class="btn btn-primary" onclick="setDuration(20)">20 mins</button>
+        <button class="btn btn-primary" onclick="setDuration(60)">1 hr</button>
+      </div>
     </div>
 
     <script>
@@ -48,7 +61,12 @@
           return;
         }
         // Redirect to timer page with minutes as a URL parameter
-        window.location.href = ` timer-bl4ckdust.html?minutes=${minutes}`;
+        window.location.href = `timer-bl4ckdust.html?minutes=${minutes}`;
+      }
+
+      function setDuration(minutes) {
+        document.getElementById("minutesInput").value = minutes;
+        startTimer();
       }
     </script>
   </body>
