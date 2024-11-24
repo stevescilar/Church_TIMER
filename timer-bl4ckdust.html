@@ -29,10 +29,10 @@
       .timer {
         display: flex;
         justify-content: center;
-        font-size: 9rem;
+        font-size: 8rem;
       }
       .timer span {
-        font-size: 9rem;
+        font-size: 8rem;
       }
       .fullscreen-btn {
         margin-top: 20px;
@@ -58,7 +58,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      // Function to retrieve minutes from URL parameter
+      // Automatically enter fullscreen mode after the page is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        const timerContainer = document.getElementById("timerContainer");
+
+        // Try to request fullscreen automatically
+        timerContainer.requestFullscreen().catch(err => {
+          console.warn("Fullscreen mode must be triggered by a user gesture.");
+        });
+      });
+
+      // Timer Logic
       function getURLParameter(name) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(name);
@@ -76,38 +86,7 @@
           const now = new Date().getTime();
           const timeLeft = countdownEndTime - now;
 
-          const percentageRemaining = (timeLeft / countdownTime) * 100;
-
-          const hours = Math.floor(
-            (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          );
-          const minutes = Math.floor(
-            (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
-          );
-          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-          if (timeLeft >= 0) {
-            const formattedTime =
-              String(hours).padStart(2, "0") +
-              ":" +
-              String(minutes).padStart(2, "0") +
-              ":" +
-              String(seconds).padStart(2, "0");
-            document.getElementById("time").innerHTML = formattedTime;
-
-            const timerContainer = document.getElementById("timerContainer");
-
-            // Change background color based on percentage remaining
-            if (percentageRemaining <= 25) {
-              timerContainer.style.background = "linear-gradient(to right, #ff4b1f, #ff416c)";
-            } else if (percentageRemaining <= 50) {
-              timerContainer.style.background = "linear-gradient(to right, #f9d423, #ff4e50)";
-            } else if (percentageRemaining <= 75) {
-              timerContainer.style.background = "linear-gradient(to right, #1fddff, #ff3f3f)";
-            } else {
-              timerContainer.style.background = "rgba(25, 0, 247, 0.7)"; // Default color
-            }
-          } else {
+          if (timeLeft <= 0) {
             clearInterval(timerInterval);
             document.getElementById("time").innerHTML = "TIME HAS EXPIRED";
 
@@ -119,6 +98,36 @@
                 "timePassed"
               ).innerHTML = `${minutesPassed} <i> Minutes Past Time </i>`;
             }, 60000);
+            return;
+          }
+
+          const hours = Math.floor(
+            (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+          );
+          const minutes = Math.floor(
+            (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
+          );
+          const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+          const formattedTime =
+            String(hours).padStart(2, "0") +
+            ":" +
+            String(minutes).padStart(2, "0") +
+            ":" +
+            String(seconds).padStart(2, "0");
+          document.getElementById("time").innerHTML = formattedTime;
+
+          // Background Transition Logic
+          const percentageRemaining = (timeLeft / countdownTime) * 100;
+          const timerContainer = document.getElementById("timerContainer");
+          if (percentageRemaining <= 25) {
+            timerContainer.style.background = "linear-gradient(to right, #ff4b1f, #ff416c)";
+          } else if (percentageRemaining <= 50) {
+            timerContainer.style.background = "linear-gradient(to right, #f9d423, #ff4e50)";
+          } else if (percentageRemaining <= 75) {
+            timerContainer.style.background = "linear-gradient(to right, #1fddff, #ff3f3f)";
+          } else {
+            timerContainer.style.background = "rgba(25, 0, 247, 0.7)";
           }
         }, 1000);
       }
@@ -126,7 +135,6 @@
       // Fullscreen Toggle Function
       function toggleFullscreen() {
         const timerContainer = document.getElementById("timerContainer");
-        const fullscreenButton = document.getElementById("fullscreenButton");
         if (!document.fullscreenElement) {
           timerContainer.requestFullscreen().catch(err => {
             alert(`Error attempting to enable fullscreen mode: ${err.message}`);
@@ -148,3 +156,4 @@
     </script>
   </body>
 </html>
+ 
