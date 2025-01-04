@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HOG Timer</title>
+    <title>HOG Timer with Video Background</title>
     <!-- Bootstrap CSS -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
@@ -11,63 +11,103 @@
     />
     <style>
       body {
-        background: linear-gradient(to right, #5f92ff, #feb47b);
+        margin: 0;
+        padding: 0;
         height: 100vh;
+        overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
-        color: white;
+        color: rgb(255, 255, 255);
+      }
+      .video-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1;
+        opacity: 0.5; /* Adjust for better transparency */
+      }
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
       }
       .timer-container {
-        background: rgba(25, 0, 247, 0.7);
-        padding: 100px;
-        border-radius: 75px;
-        box-shadow: 0 8px 16px rgba(36, 0, 238, 0.3);
-        transition: background 1.52s;
+        z-index: 2;
         text-align: center;
+        max-width: 600px;
+        width: 90%;
+      }
+      .card {
+        background: rgba(31, 26, 127, 0.85);
+        border: none;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        transition: background 0.5s ease; /* Smooth background transition */
       }
       .timer {
-        display: flex;
-        justify-content: center;
-        font-size: 8rem;
+        font-size: 6rem;
+        color: white;
       }
-      .timer span {
-        font-size: 8rem;
+      #timePassed {
+        font-size: 1.5rem;
+        margin-top: 20px;
+      }
+      .fullscreen-btn-container {
+        z-index: 2;
+        margin-top: 20px;
       }
       .fullscreen-btn {
-        margin-top: 20px;
+        display: block;
+        margin: 0 auto;
+        text-align: center;
       }
     </style>
   </head>
   <body>
-    <div class="timer-container" id="timerContainer">
-      <h1 class="mb-4">Enlargement Sunday Service</h1>
-      <img src="" alt="">
-      <hr />
-      <h3 class="mb-4">Service in Progress</h3>
-      <hr />
-      <div class="timer">
-        <span id="time">00:00:00</span>
+    <!-- Video Background -->
+    <video class="video-bg" autoplay muted loop>
+      <source src="D:\Church_TIMER\orimansi.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+
+    <!-- Semi-transparent Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Timer Container -->
+    <div class="timer-container">
+      <div class="card" id="timerCard">
+        <h1 class="mb-4">OUR YEAR OF ORIMANSI</h1>
+        <hr />
+        <h3 class="mb-4">Service in Progress</h3>
+        <hr />
+        <div class="timer">
+          <span id="time">00:00:00</span>
+        </div>
+        <div id="timePassed" style="display: none;"></div>
       </div>
-      <div
-        id="timePassed"
-        style="display: none; font-size: 1.5rem; margin-top: 20px"
-      ></div>
-      <button class="btn btn-secondary fullscreen-btn" id="fullscreenButton" onclick="toggleFullscreen()">Toggle Fullscreen</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Fullscreen Button -->
+    <div class="fullscreen-btn-container">
+      <button
+        class="btn btn-secondary fullscreen-btn"
+        id="fullscreenButton"
+        onclick="toggleFullscreen()"
+      >
+        X
+      </button>
+    </div>
+
     <script>
-      // Automatically enter fullscreen mode after the page is loaded
-      document.addEventListener("DOMContentLoaded", () => {
-        const timerContainer = document.getElementById("timerContainer");
-
-        // Try to request fullscreen automatically
-        timerContainer.requestFullscreen().catch(err => {
-          console.warn("Fullscreen mode must be triggered by a user gesture.");
-        });
-      });
-
       // Timer Logic
       function getURLParameter(name) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -82,6 +122,8 @@
         const countdownTime = countdownMinutes * 60 * 1000; // Convert to milliseconds
         const countdownEndTime = new Date().getTime() + countdownTime;
 
+        const timerCard = document.getElementById("timerCard");
+
         let timerInterval = setInterval(function () {
           const now = new Date().getTime();
           const timeLeft = countdownEndTime - now;
@@ -92,21 +134,24 @@
 
             let minutesPassed = 0;
             document.getElementById("timePassed").style.display = "block";
+
+            // Increment the "Minutes Past Time"
             timerInterval = setInterval(function () {
               minutesPassed++;
               document.getElementById(
                 "timePassed"
-              ).innerHTML = `${minutesPassed} <i> Minutes Past Time </i>`;
+              ).innerHTML = `${minutesPassed} <i>Minutes Past Time</i>`;
             }, 60000);
+
+            // Final background color
+            timerCard.style.background = "linear-gradient(to right, #ff0000, #8b0000)";
             return;
           }
 
           const hours = Math.floor(
             (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
           );
-          const minutes = Math.floor(
-            (timeLeft % (1000 * 60 * 60)) / (1000 * 60)
-          );
+          const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
           const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
           const formattedTime =
@@ -115,28 +160,34 @@
             String(minutes).padStart(2, "0") +
             ":" +
             String(seconds).padStart(2, "0");
+
           document.getElementById("time").innerHTML = formattedTime;
 
           // Background Transition Logic
           const percentageRemaining = (timeLeft / countdownTime) * 100;
-          const timerContainer = document.getElementById("timerContainer");
+
           if (percentageRemaining <= 25) {
-            timerContainer.style.background = "linear-gradient(to right, #ff4b1f, #ff416c)";
+            timerCard.style.background =
+              "linear-gradient(to right, #ff4b1f, #ff416c)";
           } else if (percentageRemaining <= 50) {
-            timerContainer.style.background = "linear-gradient(to right, #f9d423, #ff4e50)";
+            timerCard.style.background =
+              "linear-gradient(to right, #f9d423, #ff4e50)";
           } else if (percentageRemaining <= 75) {
-            timerContainer.style.background = "linear-gradient(to right, #1fddff, #ff3f3f)";
+            timerCard.style.background =
+              "linear-gradient(to right, #1fddff, #ff3f3f)";
           } else {
-            timerContainer.style.background = "rgba(25, 0, 247, 0.7)";
+            timerCard.style.background = "rgba(25, 0, 247, 0.7)";
           }
         }, 1000);
       }
 
       // Fullscreen Toggle Function
+      const fullscreenButton = document.getElementById("fullscreenButton");
+
       function toggleFullscreen() {
-        const timerContainer = document.getElementById("timerContainer");
+        const bodyElement = document.body; // Select the entire body for fullscreen
         if (!document.fullscreenElement) {
-          timerContainer.requestFullscreen().catch(err => {
+          bodyElement.requestFullscreen().catch((err) => {
             alert(`Error attempting to enable fullscreen mode: ${err.message}`);
           });
         } else {
@@ -144,16 +195,14 @@
         }
       }
 
-      // Monitor fullscreen changes
+      // Add fullscreenchange event listener
       document.addEventListener("fullscreenchange", () => {
-        const fullscreenButton = document.getElementById("fullscreenButton");
         if (document.fullscreenElement) {
-          fullscreenButton.style.display = "none";
+          fullscreenButton.style.display = "none"; // Hide the button in fullscreen
         } else {
-          fullscreenButton.style.display = "block";
+          fullscreenButton.style.display = "block"; // Show the button when exiting fullscreen
         }
       });
     </script>
   </body>
 </html>
- 
