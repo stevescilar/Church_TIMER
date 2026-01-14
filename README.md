@@ -1,7 +1,7 @@
 # HOG Timer
 
 ## Overview
-HOG Timer is a simple web application designed to provide a countdown timer for events. It allows users to set a timer duration in minutes and displays a countdown on the screen. The background color changes based on the percentage of time remaining, enhancing the visual experience as the timer progresses.
+HOG Timer is a simple web application designed to provide a countdown timer for events. It allows user/the church to set a timer duration in minutes and displays a countdown on the screen. The background color changes based on the percentage of time remaining, enhancing the visual experience as the timer progresses.
 
 ## Features
 - User-friendly interface to set the timer duration in minutes.
