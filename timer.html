@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Church Timer — Advancement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --gold: #a8793e;
+        --gold-light: #c9a15c;
+        --card-bg: rgba(255, 253, 246, 0.88);
+        --card-border: rgba(168, 124, 63, 0.28);
+        --text: #2b2013;
+        --text-muted: rgba(43, 32, 19, 0.6);
+        --danger: #c73e3e;
+        --warn: #c07816;
+        --radius: 20px;
+      }
+
+      html, body { height: 100%; overflow: hidden; font-family: "Inter", sans-serif; background: #f5efe0; }
+
+      #videoBg {
+        position: fixed; inset: 0; width: 100%; height: 100%;
+        object-fit: cover; z-index: 0; opacity: 0.8;
+      }
+      .overlay {
+        position: fixed; inset: 0; z-index: 1;
+        background: radial-gradient(ellipse at center, rgba(255,253,246,0.35) 0%, rgba(245,239,224,0.65) 100%);
+      }
+
+      .screen {
+        display: none; position: fixed; inset: 0; z-index: 2;
+        align-items: center; justify-content: center; padding: 1.5rem;
+      }
+      .screen.active { display: flex; }
+
+      /* ── Entry screen ── */
+      .entry-card {
+        background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: var(--radius); padding: 2.5rem 2.75rem;
+        width: 100%; max-width: 400px; text-align: center;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 0 80px rgba(200,169,110,0.08), inset 0 1px 0 rgba(200,169,110,0.12);
+      }
+      .entry-title {
+        font-family: "Cinzel", serif; font-size: 1.1rem; font-weight: 600;
+        color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.4rem;
+      }
+      .entry-subtitle {
+        font-size: 0.75rem; color: var(--text-muted);
+        letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2rem;
+      }
+      .entry-card label {
+        font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em;
+        text-transform: uppercase; display: block; text-align: left; margin-bottom: 0.5rem;
+      }
+      .entry-card input[type="number"] {
+        width: 100%; padding: 12px 16px; font-size: 1.5rem;
+        font-family: "Inter", sans-serif; font-weight: 300; text-align: center;
+        background: rgba(168,124,63,0.10); border: 1px solid var(--card-border);
+        border-radius: 10px; color: var(--text); outline: none;
+        margin-bottom: 1.25rem; letter-spacing: 0.05em; -moz-appearance: textfield;
+      }
+      .entry-card input[type="number"]::-webkit-outer-spin-button,
+      .entry-card input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+      .entry-card input[type="number"]:focus {
+        border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,169,110,0.12);
+      }
+      .start-btn {
+        width: 100%; padding: 13px; font-size: 0.8rem;
+        font-family: "Cinzel", serif; font-weight: 600;
+        letter-spacing: 0.15em; text-transform: uppercase;
+        background: linear-gradient(135deg, #b8955a 0%, #d4aa72 50%, #b8955a 100%);
+        border: none; border-radius: 10px; color: #1a0f00; cursor: pointer;
+        margin-bottom: 1.5rem; transition: opacity 0.2s, transform 0.15s;
+      }
+      .start-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      .start-btn:active { transform: scale(0.98); }
+
+      .divider {
+        display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;
+      }
+      .divider span {
+        font-size: 0.65rem; color: var(--text-muted);
+        letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
+      }
+      .divider::before, .divider::after {
+        content: ""; flex: 1; height: 1px; background: var(--card-border);
+      }
+      .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .quick-btn {
+        padding: 9px 8px; font-size: 0.75rem; font-family: "Inter", sans-serif;
+        font-weight: 400; background: rgba(168,124,63,0.10);
+        border: 1px solid var(--card-border); border-radius: 8px;
+        color: var(--gold-light); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .quick-btn:hover { background: rgba(200,169,110,0.14); border-color: rgba(200,169,110,0.45); }
+
+      /* ── Remote status badge ── */
+      .remote-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em;
+        text-transform: uppercase; margin-bottom: 1.5rem;
+      }
+      .remote-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #3a3a5a; transition: background 0.4s;
+      }
+      .remote-dot.live { background: #52e07a; box-shadow: 0 0 6px rgba(82,224,122,0.6); }
+
+      /* ── Timer screen ── */
+      .timer-card {
+        background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: var(--radius); padding: 4rem 4rem 3rem;
+        width: 100%; max-width: 1300px; text-align: center;
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 0 140px rgba(200,169,110,0.08), inset 0 1px 0 rgba(200,169,110,0.12);
+        transition: border-color 0.6s ease;
+      }
+      .timer-display {
+        font-family: "Cinzel", serif;
+        font-size: clamp(7rem, 24vw, 18rem);
+        font-weight: 400; color: var(--text);
+        letter-spacing: 0.04em; line-height: 1;
+        margin-bottom: 0.5rem; transition: color 0.5s ease;
+      }
+      .timer-display.expired {
+        color: var(--danger);
+        font-size: clamp(4rem, 11vw, 7.5rem);
+        letter-spacing: 0.15em;
+      }
+      .overtime-row {
+        display: none; font-size: 1.4rem; color: var(--danger);
+        letter-spacing: 0.06em; margin-bottom: 1.5rem;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+      .ring-wrap { position: relative; width: 100%; margin: 2.5rem 0 2rem; }
+      .progress-bar-bg {
+        background: rgba(168,124,63,0.15); border-radius: 99px; height: 10px; overflow: hidden;
+      }
+      .progress-bar-fill {
+        height: 100%; border-radius: 99px; background: var(--gold);
+        transition: width 0.8s linear, background 0.8s ease; width: 100%;
+      }
+      .timer-actions {
+        display: flex; gap: 14px; justify-content: center; margin-top: 0.5rem;
+        opacity: 0; transition: opacity 0.4s ease;
+      }
+      .timer-card:hover .timer-actions,
+      .timer-actions:focus-within,
+      .timer-actions.force-show {
+        opacity: 1;
+      }
+      .action-btn {
+        padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.1em;
+        text-transform: uppercase; background: rgba(168,124,63,0.10);
+        border: 1px solid var(--card-border); border-radius: 10px;
+        color: var(--text-muted); cursor: pointer;
+        transition: background 0.15s, color 0.15s; font-family: "Inter", sans-serif;
+      }
+      .action-btn:hover {
+        background: rgba(200,169,110,0.13); color: var(--gold-light);
+        border-color: rgba(200,169,110,0.4);
+      }
+
+      /* Waiting for remote pulse */
+      .waiting-pill {
+        display: none; align-items: center; gap: 8px;
+        font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.1em;
+        text-transform: uppercase; margin-top: 1.5rem; justify-content: center;
+      }
+      .waiting-pill.show { display: flex; }
+      .waiting-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
+        animation: waitpulse 1.2s ease-in-out infinite;
+      }
+      @keyframes waitpulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    </style>
+  </head>
+  <body>
+    <video id="videoBg" autoplay muted loop playsinline>
+      <source src="Advancement.mp4" type="video/mp4" />
+    </video>
+    <div class="overlay"></div>
+
+    <!-- Entry / waiting screen -->
+    <div id="entryScreen" class="screen active">
+      <div class="entry-card">
+        <div class="entry-title">Our Year of Advancement</div>
+        <div class="entry-subtitle">Church Service Timer</div>
+
+        <div class="remote-badge">
+          <div class="remote-dot" id="remoteDot"></div>
+          <span id="remoteStatus">Connecting…</span>
+        </div>
+
+        <label for="minutesInput">Duration (minutes)</label>
+        <input type="number" id="minutesInput" placeholder="45" min="1" />
+        <button class="start-btn" onclick="startTimerLocal()">Begin Session</button>
+
+        <div class="divider"><span>Quick set</span></div>
+        <div class="quick-grid">
+          <button class="quick-btn" onclick="setDuration(5)">5 min</button>
+          <button class="quick-btn" onclick="setDuration(10)">10 min</button>
+          <button class="quick-btn" onclick="setDuration(15)">15 min</button>
+          <button class="quick-btn" onclick="setDuration(30)">30 min</button>
+          <button class="quick-btn" onclick="setDuration(50)">50 min</button>
+          <button class="quick-btn" onclick="setDuration(60)">1 hr</button>
+        </div>
+
+        <div class="waiting-pill show" id="waitingPill">
+          <div class="waiting-dot"></div>
+          <span>Waiting for remote start…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timer screen -->
+    <div id="timerScreen" class="screen">
+      <div class="timer-card" id="timerCard">
+        <div class="timer-display" id="timeDisplay">00:00:00</div>
+        <div class="overtime-row" id="overtimeRow" aria-live="polite"></div>
+        <div class="ring-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+        </div>
+        <div class="timer-actions">
+          <button class="action-btn" onclick="resetTimer()">← Reset</button>
+          <button class="action-btn" id="fsBtn" onclick="toggleFullscreen()">⤢ Fullscreen</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── Config ──────────────────────────────────────────────
+      const STATE_URL = 'state.php';   // same folder
+      const POLL_MS   = 2500;          // poll every 2.5 seconds
+      // ────────────────────────────────────────────────────────
+
+      let timerInterval = null;
+      let pollInterval  = null;
+      let countdownTime = 0;
+      let countdownEndTime = 0;
+      let startedAt = 0;
+      let lastSetAt = 0;   // track which command we've already acted on
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function formatMs(ms) {
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+      }
+
+      // ── Remote polling ───────────────────────────────────────
+      async function pollState() {
+        try {
+          const res  = await fetch(STATE_URL + '?t=' + Date.now());
+          const data = await res.json();
+
+          // Mark connection live
+          document.getElementById('remoteDot').classList.add('live');
+          document.getElementById('remoteStatus').textContent = 'Remote connected';
+
+          // Only act on commands we haven't seen yet
+          if (data.setAt && data.setAt !== lastSetAt) {
+            lastSetAt = data.setAt;
+            if (data.command === 'start' && data.minutes > 0) {
+              startTimer(data.minutes);
+            } else if (data.command === 'reset') {
+              resetTimer();
+            }
+          }
+        } catch (e) {
+          document.getElementById('remoteDot').classList.remove('live');
+          document.getElementById('remoteStatus').textContent = 'Remote offline';
+        }
+      }
+
+      function startPolling() {
+        if (pollInterval) clearInterval(pollInterval);
+        pollState(); // immediate first check
+        pollInterval = setInterval(pollState, POLL_MS);
+      }
+
+      // ── Timer logic ──────────────────────────────────────────
+      function setDuration(m) {
+        document.getElementById('minutesInput').value = m;
+        startTimerLocal();
+      }
+
+      function startTimerLocal() {
+        const val = parseInt(document.getElementById('minutesInput').value);
+        if (!val || val <= 0) { document.getElementById('minutesInput').focus(); return; }
+        startTimer(val);
+      }
+
+      function startTimer(minutes) {
+        countdownTime    = minutes * 60 * 1000;
+        countdownEndTime = Date.now() + countdownTime;
+        startedAt        = Date.now();
+
+        const display = document.getElementById('timeDisplay');
+        display.className = 'timer-display';
+        display.textContent = '00:00:00';
+
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('progressBar').style.background = 'var(--gold)';
+        document.getElementById('timerCard').style.borderColor = 'var(--card-border)';
+        document.getElementById('overtimeRow').style.display = 'none';
+
+        showScreen('timerScreen');
+
+        if (timerInterval) clearInterval(timerInterval);
+        tick();
+        timerInterval = setInterval(tick, 500);
+      }
+
+      function tick() {
+        const now      = Date.now();
+        const timeLeft = countdownEndTime - now;
+
+        if (timeLeft <= 0) {
+          const display = document.getElementById('timeDisplay');
+          display.className = 'timer-display expired';
+          display.textContent = 'TIME HAS EXPIRED';
+          document.getElementById('progressBar').style.width = '0%';
+          document.getElementById('progressBar').style.background = 'var(--danger)';
+          document.getElementById('timerCard').style.borderColor = 'rgba(224,82,82,0.4)';
+          const past = Math.abs(timeLeft);
+          const min  = Math.floor(past / 60000);
+          const sec  = Math.floor((past % 60000) / 1000);
+          const row  = document.getElementById('overtimeRow');
+          row.style.display = 'block';
+          row.textContent = min > 0 ? `${min} min ${pad(sec)}s past time` : `${pad(sec)}s past time`;
+          return;
+        }
+
+        const h   = Math.floor(timeLeft / 3600000);
+        const m   = Math.floor((timeLeft % 3600000) / 60000);
+        const s   = Math.floor((timeLeft % 60000) / 1000);
+        document.getElementById('timeDisplay').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+        const pct = (timeLeft / countdownTime) * 100;
+        document.getElementById('progressBar').style.width = pct + '%';
+
+        const bar  = document.getElementById('progressBar');
+        const card = document.getElementById('timerCard');
+        if (pct <= 10) {
+          bar.style.background = 'var(--danger)'; card.style.borderColor = 'rgba(224,82,82,0.35)';
+        } else if (pct <= 25) {
+          bar.style.background = 'var(--warn)'; card.style.borderColor = 'rgba(224,152,50,0.35)';
+        } else if (pct <= 50) {
+          bar.style.background = '#c8a030'; card.style.borderColor = 'rgba(200,160,48,0.3)';
+        } else {
+          bar.style.background = 'var(--gold)'; card.style.borderColor = 'var(--card-border)';
+        }
+      }
+
+      function resetTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
+        showScreen('entryScreen');
+      }
+
+      function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+      }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(err => alert('Fullscreen error: ' + err.message));
+        } else {
+          document.exitFullscreen();
+        }
+      }
+      document.addEventListener('fullscreenchange', () => {
+        document.getElementById('fsBtn').textContent =
+          document.fullscreenElement ? '✕ Exit fullscreen' : '⤢ Fullscreen';
+      });
+
+      document.getElementById('minutesInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') startTimerLocal();
+      });
+
+      // Start polling immediately
+      startPolling();
+
+      // Reveal Reset/Fullscreen on tap (for touchscreens without hover),
+      // then auto-hide again after a few seconds of no interaction
+      let actionsHideTimer = null;
+      document.getElementById('timerCard').addEventListener('click', () => {
+        const actions = document.querySelector('.timer-actions');
+        actions.classList.add('force-show');
+        clearTimeout(actionsHideTimer);
+        actionsHideTimer = setTimeout(() => actions.classList.remove('force-show'), 4000);
+      });
+    </script>
+  </body>
+</html>

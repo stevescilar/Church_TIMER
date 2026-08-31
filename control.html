@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Timer Remote — Advancement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --gold: #a8793e;
+        --gold-light: #c9a15c;
+        --card-bg: rgba(255, 253, 246, 0.92);
+        --card-border: rgba(168, 124, 63, 0.25);
+        --text: #2b2013;
+        --text-muted: rgba(43, 32, 19, 0.58);
+        --danger: #c73e3e;
+        --warn: #c07816;
+        --success: #2f9e5c;
+        --radius: 16px;
+      }
+
+      html, body {
+        min-height: 100%; font-family: "Inter", sans-serif;
+        background: #f5efe0;
+        background-image:
+          radial-gradient(ellipse at 20% 20%, rgba(168,124,63,0.10) 0%, transparent 60%),
+          radial-gradient(ellipse at 80% 80%, rgba(150,120,200,0.06) 0%, transparent 60%);
+        color: var(--text);
+      }
+
+      /* Grain overlay */
+      body::before {
+        content: "";
+        position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        opacity: 0.25;
+      }
+
+      .page { position: relative; z-index: 1; max-width: 440px; margin: 0 auto; padding: 2rem 1.25rem 4rem; display: none; }
+      .page.unlocked { display: block; }
+
+      /* Header */
+      .page-header { text-align: center; margin-bottom: 2.5rem; padding-top: 1rem; }
+      .page-header .crown {
+        font-size: 1.4rem; margin-bottom: 0.5rem; opacity: 0.8;
+      }
+      .page-title {
+        font-family: "Cinzel", serif; font-size: 1rem; font-weight: 700;
+        letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
+        margin-bottom: 0.25rem;
+      }
+      .page-sub {
+        font-size: 0.65rem; color: var(--text-muted);
+        letter-spacing: 0.12em; text-transform: uppercase;
+      }
+
+      /* Status bar */
+      .status-bar {
+        display: flex; align-items: center; justify-content: space-between;
+        background: rgba(168,124,63,0.10); border: 1px solid var(--card-border);
+        border-radius: 10px; padding: 10px 16px; margin-bottom: 1.5rem;
+        font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .status-live { display: flex; align-items: center; gap: 7px; }
+      .status-dot {
+        width: 7px; height: 7px; border-radius: 50%;
+        background: #3a3a5a; transition: background 0.4s;
+        flex-shrink: 0;
+      }
+      .status-dot.live { background: var(--success); box-shadow: 0 0 8px rgba(82,224,122,0.5); }
+      .status-dot.error { background: var(--danger); }
+      #statusText { transition: color 0.3s; }
+
+      /* Card */
+      .card {
+        background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: var(--radius); padding: 1.75rem;
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 0 60px rgba(200,169,110,0.05), inset 0 1px 0 rgba(200,169,110,0.1);
+        margin-bottom: 1rem;
+      }
+      .card-label {
+        font-size: 0.65rem; font-weight: 500; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .card-label::after {
+        content: ""; flex: 1; height: 1px; background: var(--card-border);
+      }
+
+      /* Duration input */
+      .duration-wrap { position: relative; margin-bottom: 1.25rem; }
+      .duration-input {
+        width: 100%; padding: 18px 56px 18px 20px;
+        font-size: 2.5rem; font-family: "Cinzel", serif; font-weight: 400;
+        text-align: center; background: rgba(168,124,63,0.10);
+        border: 1px solid var(--card-border); border-radius: 12px;
+        color: var(--text); outline: none; letter-spacing: 0.05em;
+        -moz-appearance: textfield; transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .duration-input::-webkit-outer-spin-button,
+      .duration-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+      .duration-input:focus {
+        border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,169,110,0.1);
+      }
+      .duration-unit {
+        position: absolute; right: 18px; bottom: 20px;
+        font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--text-muted); pointer-events: none;
+      }
+
+      /* Quick presets */
+      .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+      .preset {
+        padding: 10px 6px; font-size: 0.75rem; text-align: center;
+        background: rgba(200,169,110,0.06); border: 1px solid var(--card-border);
+        border-radius: 8px; color: var(--gold-light); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, transform 0.1s;
+        font-family: "Inter", sans-serif;
+      }
+      .preset:hover { background: rgba(200,169,110,0.13); border-color: rgba(200,169,110,0.4); }
+      .preset:active { transform: scale(0.96); }
+      .preset.selected {
+        background: rgba(200,169,110,0.18); border-color: var(--gold);
+        color: var(--gold);
+      }
+
+      /* Send button */
+      .send-btn {
+        width: 100%; padding: 15px; font-size: 0.85rem;
+        font-family: "Cinzel", serif; font-weight: 700;
+        letter-spacing: 0.18em; text-transform: uppercase;
+        background: linear-gradient(135deg, #b8955a 0%, #d4aa72 45%, #b8955a 100%);
+        border: none; border-radius: 12px; color: #1a0f00;
+        cursor: pointer; transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 4px 24px rgba(200,169,110,0.18);
+      }
+      .send-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(200,169,110,0.25); }
+      .send-btn:active { transform: scale(0.98); }
+      .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+      /* Reset button */
+      .reset-btn {
+        width: 100%; padding: 12px; font-size: 0.75rem;
+        font-family: "Inter", sans-serif; font-weight: 400;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        background: transparent; border: 1px solid rgba(224,82,82,0.3);
+        border-radius: 10px; color: rgba(224,82,82,0.7);
+        cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+      .reset-btn:hover {
+        background: rgba(224,82,82,0.08); border-color: rgba(224,82,82,0.55);
+        color: var(--danger);
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
+        background: rgba(255,253,246,0.96); border: 1px solid var(--card-border);
+        border-radius: 10px; padding: 12px 20px;
+        font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+        box-shadow: 0 6px 24px rgba(43,32,19,0.12);
+        color: var(--text-muted); opacity: 0; transition: opacity 0.3s, transform 0.3s;
+        pointer-events: none; white-space: nowrap; z-index: 100;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+      .toast.success { border-color: rgba(82,224,122,0.4); color: var(--success); }
+      .toast.error   { border-color: rgba(224,82,82,0.4);  color: var(--danger);  }
+
+      /* Current state preview */
+      .current-state {
+        text-align: center; padding: 0.75rem;
+        font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .current-state span { color: var(--gold-light); }
+
+      /* ── Live timer card ── */
+      .live-card {
+        display: none; background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: var(--radius); padding: 1.5rem 1.75rem;
+        margin-bottom: 1rem; text-align: center; transition: border-color 0.6s ease;
+      }
+      .live-card.visible { display: block; }
+      .live-card-label {
+        font-size: 0.65rem; font-weight: 500; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .live-card-label::after { content: ""; flex: 1; height: 1px; background: var(--card-border); }
+      .live-time {
+        font-family: "Cinzel", serif; font-size: 3.25rem; font-weight: 400;
+        color: var(--text); letter-spacing: 0.05em; line-height: 1;
+        margin-bottom: 0.35rem; transition: color 0.5s;
+      }
+      .live-time.expired { color: var(--danger); font-size: 1rem; letter-spacing: 0.14em; }
+      .live-overtime {
+        display: none; font-size: 0.72rem; color: var(--danger);
+        letter-spacing: 0.06em; margin-bottom: 0.6rem;
+        animation: ctrlpulse 1.5s ease-in-out infinite;
+      }
+      @keyframes ctrlpulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+      .live-overtime.show { display: block; }
+      .live-bar-bg {
+        background: rgba(168,124,63,0.15); border-radius: 99px;
+        height: 4px; overflow: hidden; margin: 0.85rem 0 0.5rem;
+      }
+      .live-bar-fill {
+        height: 100%; border-radius: 99px; background: var(--gold);
+        transition: width 1s linear, background 0.8s ease; width: 100%;
+      }
+      .live-stats {
+        display: flex; justify-content: space-between;
+        font-size: 0.63rem; color: var(--text-muted);
+        letter-spacing: 0.07em; text-transform: uppercase;
+      }
+
+      #pinGate {
+        position: fixed; inset: 0; z-index: 200;
+        display: flex; align-items: center; justify-content: center;
+        padding: 1.5rem;
+        background: #f5efe0;
+        background-image:
+          radial-gradient(ellipse at 20% 20%, rgba(168,124,63,0.10) 0%, transparent 60%),
+          radial-gradient(ellipse at 80% 80%, rgba(150,120,200,0.06) 0%, transparent 60%);
+      }
+      #pinGate.hidden { display: none; }
+
+      .pin-card {
+        background: var(--card-bg); border: 1px solid var(--card-border);
+        border-radius: var(--radius); padding: 2.5rem 2.25rem;
+        width: 100%; max-width: 340px; text-align: center;
+        box-shadow: 0 0 80px rgba(200,169,110,0.07), inset 0 1px 0 rgba(200,169,110,0.1);
+      }
+      .pin-crown { font-size: 1.4rem; margin-bottom: 0.6rem; opacity: 0.75; }
+      .pin-title {
+        font-family: "Cinzel", serif; font-size: 0.95rem; font-weight: 700;
+        letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold);
+        margin-bottom: 0.25rem;
+      }
+      .pin-sub {
+        font-size: 0.63rem; color: var(--text-muted);
+        letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2rem;
+      }
+
+      /* PIN dots */
+      .pin-dots {
+        display: flex; gap: 14px; justify-content: center; margin-bottom: 1.75rem;
+      }
+      .pin-dot {
+        width: 14px; height: 14px; border-radius: 50%;
+        border: 1.5px solid rgba(200,169,110,0.35);
+        background: transparent; transition: background 0.2s, border-color 0.2s;
+      }
+      .pin-dot.filled { background: var(--gold); border-color: var(--gold); }
+      .pin-dot.error  { background: var(--danger); border-color: var(--danger); }
+
+      /* PIN keypad */
+      .pin-keypad {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 10px; margin-bottom: 1rem;
+      }
+      .pin-key {
+        padding: 16px 8px; font-size: 1.2rem; font-family: "Cinzel", serif;
+        font-weight: 400; background: rgba(168,124,63,0.09);
+        border: 1px solid var(--card-border); border-radius: 10px;
+        color: var(--text); cursor: pointer;
+        transition: background 0.12s, transform 0.1s;
+        user-select: none;
+      }
+      .pin-key:hover  { background: rgba(200,169,110,0.13); }
+      .pin-key:active { transform: scale(0.93); background: rgba(200,169,110,0.18); }
+      .pin-key.del    { font-size: 1rem; color: var(--text-muted); }
+      .pin-key.go {
+        background: linear-gradient(135deg, #b8955a, #d4aa72, #b8955a);
+        color: #1a0f00; border: none; font-size: 0.75rem;
+        letter-spacing: 0.1em; font-family: "Inter", sans-serif; font-weight: 600;
+      }
+      .pin-key.go:hover { opacity: 0.9; }
+
+      .pin-error {
+        font-size: 0.68rem; color: var(--danger); letter-spacing: 0.08em;
+        min-height: 1.2em; margin-top: 0.25rem;
+        animation: pinshake 0.35s ease;
+      }
+      @keyframes pinshake {
+        0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+        60%{transform:translateX(6px)}  80%{transform:translateX(-3px)}
+      }
+
+      /* Lock icon in header when authenticated */
+      .lock-badge {
+        display: none; position: absolute; top: 1rem; right: 1.25rem;
+        font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em;
+        cursor: pointer; padding: 5px 10px;
+        border: 1px solid var(--card-border); border-radius: 20px;
+        transition: color 0.2s, border-color 0.2s;
+      }
+      .lock-badge:hover { color: var(--danger); border-color: rgba(224,82,82,0.4); }
+    </style>
+  </head>
+  <body>
+    <!-- PIN Gate — covers everything until unlocked -->
+    <div id="pinGate">
+      <div class="pin-card">
+        <div class="pin-crown">✦</div>
+        <div class="pin-title">Advancement Timer</div>
+        <div class="pin-sub">Enter PIN to continue</div>
+
+        <div class="pin-dots">
+          <div class="pin-dot" id="dot0"></div>
+          <div class="pin-dot" id="dot1"></div>
+          <div class="pin-dot" id="dot2"></div>
+          <div class="pin-dot" id="dot3"></div>
+        </div>
+
+        <div class="pin-keypad">
+          <button class="pin-key" onclick="pinKey('1')">1</button>
+          <button class="pin-key" onclick="pinKey('2')">2</button>
+          <button class="pin-key" onclick="pinKey('3')">3</button>
+          <button class="pin-key" onclick="pinKey('4')">4</button>
+          <button class="pin-key" onclick="pinKey('5')">5</button>
+          <button class="pin-key" onclick="pinKey('6')">6</button>
+          <button class="pin-key" onclick="pinKey('7')">7</button>
+          <button class="pin-key" onclick="pinKey('8')">8</button>
+          <button class="pin-key" onclick="pinKey('9')">9</button>
+          <button class="pin-key del" onclick="pinDel()">⌫</button>
+          <button class="pin-key" onclick="pinKey('0')">0</button>
+          <button class="pin-key go" onclick="pinSubmit()">Enter</button>
+        </div>
+
+        <div class="pin-error" id="pinError"></div>
+      </div>
+    </div>
+
+    <!-- Lock/logout badge shown when authenticated -->
+    <div class="lock-badge" id="lockBadge" onclick="pinLock()" title="Lock controls">
+      🔒 Lock
+    </div>
+
+    <div class="page">
+      <div class="page-header">
+        <div class="crown">✦</div>
+        <div class="page-title">Advancement Timer</div>
+        <div class="page-sub">Remote Control</div>
+      </div>
+
+      <!-- Connection status -->
+      <div class="status-bar">
+        <div class="status-live">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Connecting…</span>
+        </div>
+        <span id="serverState">—</span>
+      </div>
+
+      <!-- Live remaining time — shown when a timer is active -->
+      <div class="live-card" id="liveCard">
+        <div class="live-card-label">Screen Timer — Live</div>
+        <div class="live-time" id="liveTime">00:00:00</div>
+        <div class="live-overtime" id="liveOvertime"></div>
+        <div class="live-bar-bg">
+          <div class="live-bar-fill" id="liveBar"></div>
+        </div>
+        <div class="live-stats">
+          <span id="liveDuration">—</span>
+          <span id="liveElapsed">Elapsed: —</span>
+        </div>
+      </div>
+
+      <!-- Main control card -->
+      <div class="card">
+        <div class="card-label">Set Duration</div>
+
+        <div class="duration-wrap">
+          <input type="number" class="duration-input" id="minutesInput" placeholder="45" min="1" max="600" />
+          <div class="duration-unit">min</div>
+        </div>
+
+        <div class="presets">
+          <button class="preset" onclick="setPreset(5)">5 min</button>
+          <button class="preset" onclick="setPreset(10)">10 min</button>
+          <button class="preset" onclick="setPreset(15)">15 min</button>
+          <button class="preset" onclick="setPreset(30)">30 min</button>
+          <button class="preset" onclick="setPreset(50)">50 min</button>
+          <button class="preset" onclick="setPreset(60)">1 hour</button>
+        </div>
+
+        <button class="send-btn" id="sendBtn" onclick="sendStart()">▶ Start Timer on Screen</button>
+      </div>
+
+      <!-- Reset card -->
+      <div class="card">
+        <div class="card-label">Controls</div>
+        <button class="reset-btn" onclick="sendReset()">↺ Reset Timer on Screen</button>
+      </div>
+
+      <div class="current-state" id="currentState">Waiting for server…</div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const STATE_URL  = 'state.php';
+      const POLL_MS    = 3000;
+      const SESSION_KEY = 'timer_pin_ok';
+
+      let pollInterval = null;
+      let sessionPin   = '';   // PIN held in memory for the session
+
+      // ════════════════════════════════════════════
+      // PIN GATE
+      // ════════════════════════════════════════════
+      let pinBuffer = '';
+      const MAX_PIN = 8;   // supports 4–8 digit PINs
+
+      function pinKey(d) {
+        if (pinBuffer.length >= MAX_PIN) return;
+        pinBuffer += d;
+        updateDots();
+        if (pinBuffer.length >= 4) {
+          // Auto-submit once 4+ digits entered and user taps Enter,
+          // but also allow longer PINs — auto-submit at MAX_PIN
+          if (pinBuffer.length === MAX_PIN) pinSubmit();
+        }
+      }
+
+      function pinDel() {
+        pinBuffer = pinBuffer.slice(0, -1);
+        updateDots();
+        clearPinError();
+      }
+
+      function updateDots() {
+        for (let i = 0; i < 4; i++) {
+          const dot = document.getElementById('dot' + i);
+          dot.classList.toggle('filled', i < pinBuffer.length);
+          dot.classList.remove('error');
+        }
+      }
+
+      function clearPinError() {
+        document.getElementById('pinError').textContent = '';
+      }
+
+      function showPinError(msg) {
+        pinBuffer = '';
+        updateDots();
+        const el = document.getElementById('pinError');
+        el.textContent = msg;
+        // Flash dots red
+        for (let i = 0; i < 4; i++) {
+          const dot = document.getElementById('dot' + i);
+          dot.classList.add('error');
+          setTimeout(() => dot.classList.remove('error'), 600);
+        }
+      }
+
+      async function pinSubmit() {
+        if (pinBuffer.length < 4) {
+          showPinError('PIN must be at least 4 digits');
+          return;
+        }
+
+        const attempt = pinBuffer;
+        pinBuffer = '';
+        updateDots();
+
+        try {
+          const res  = await fetch(STATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: 'verify-pin', pin: attempt })
+          });
+          const data = await res.json();
+
+          if (data.ok) {
+            sessionPin = attempt;
+            sessionStorage.setItem(SESSION_KEY, '1');
+            unlockUI();
+          } else {
+            showPinError('Incorrect PIN — try again');
+          }
+        } catch (e) {
+          showPinError('Cannot reach server');
+        }
+      }
+
+      function unlockUI() {
+        document.querySelector('.page').classList.add('unlocked');
+        document.getElementById('pinGate').classList.add('hidden');
+        document.getElementById('lockBadge').style.display = 'block';
+        // Start polling now that we're in
+        pollState();
+        pollInterval = setInterval(pollState, POLL_MS);
+      }
+
+      function pinLock() {
+        sessionPin = '';
+        sessionStorage.removeItem(SESSION_KEY);
+        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        pinBuffer = '';
+        updateDots();
+        clearPinError();
+        document.getElementById('lockBadge').style.display = 'none';
+        document.getElementById('pinGate').classList.remove('hidden');
+        document.querySelector('.page').classList.remove('unlocked');
+      }
+
+      // Allow keyboard input on PIN screen
+      document.addEventListener('keydown', e => {
+        if (!document.getElementById('pinGate').classList.contains('hidden')) {
+          if (e.key >= '0' && e.key <= '9') pinKey(e.key);
+          else if (e.key === 'Backspace') pinDel();
+          else if (e.key === 'Enter') pinSubmit();
+        }
+      });
+
+      // On page load — if session was already authenticated, skip PIN
+      // (sessionStorage clears on tab close, so this only persists within same tab session)
+      if (sessionStorage.getItem(SESSION_KEY) === '1') {
+        // We don't have the PIN anymore after a hard refresh — must re-enter
+        // sessionStorage flag only skips gate if PIN is still in memory (same session)
+        // Since JS restarts on refresh, we always ask again for security
+        sessionStorage.removeItem(SESSION_KEY);
+      }
+
+      // ════════════════════════════════════════════
+      // TOAST
+      // ════════════════════════════════════════════
+      function showToast(msg, type = '') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast show ' + type;
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.className = 'toast', 2800);
+      }
+
+      // ════════════════════════════════════════════
+      // PRESETS
+      // ════════════════════════════════════════════
+      function setPreset(m) {
+        document.getElementById('minutesInput').value = m;
+        document.querySelectorAll('.preset').forEach(b => b.classList.remove('selected'));
+        event.target.classList.add('selected');
+      }
+
+      document.getElementById('minutesInput').addEventListener('input', () => {
+        document.querySelectorAll('.preset').forEach(b => b.classList.remove('selected'));
+      });
+
+      // ════════════════════════════════════════════
+      // TIMER COMMANDS
+      // ════════════════════════════════════════════
+      async function sendStart() {
+        const val = parseInt(document.getElementById('minutesInput').value);
+        if (!val || val < 1 || val > 600) {
+          showToast('Enter a valid duration (1–600 min)', 'error');
+          return;
+        }
+
+        const btn = document.getElementById('sendBtn');
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+
+        try {
+          const res  = await fetch(STATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: 'start', minutes: val, pin: sessionPin })
+          });
+          const data = await res.json();
+
+          if (res.status === 401) { pinLock(); return; }
+
+          if (data.ok) {
+            showToast(`▶ ${val} min timer sent to screen`, 'success');
+            applyLiveState(data.state);
+          } else {
+            showToast('Error: ' + (data.error || 'Unknown'), 'error');
+          }
+        } catch (e) {
+          showToast('Could not reach server', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = '▶ Start Timer on Screen';
+        }
+      }
+
+      async function sendReset() {
+        try {
+          const res  = await fetch(STATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: 'reset', minutes: 0, pin: sessionPin })
+          });
+          const data = await res.json();
+
+          if (res.status === 401) { pinLock(); return; }
+
+          if (data.ok) {
+            showToast('↺ Reset sent to screen', 'success');
+            hideLiveCard();
+          } else {
+            showToast('Error: ' + (data.error || 'Unknown'), 'error');
+          }
+        } catch (e) {
+          showToast('Could not reach server', 'error');
+        }
+      }
+
+      // ════════════════════════════════════════════
+      // LIVE TIMER CARD
+      // ════════════════════════════════════════════
+      let liveInterval = null;
+      let liveSetAt    = 0;
+      let liveMinutes  = 0;
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+
+      function formatMs(ms) {
+        const h = Math.floor(ms / 3600000);
+        const m = Math.floor((ms % 3600000) / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+      }
+
+      function hideLiveCard() {
+        if (liveInterval) { clearInterval(liveInterval); liveInterval = null; }
+        liveSetAt = 0; liveMinutes = 0;
+        document.getElementById('liveCard').classList.remove('visible');
+      }
+
+      function applyLiveState(state) {
+        if (!state) return;
+        const cmd   = state.command || 'idle';
+        const min   = state.minutes || 0;
+        const setAt = state.setAt   || 0;
+
+        if (cmd !== 'start' || min <= 0 || setAt <= 0) { hideLiveCard(); return; }
+
+        if (setAt !== liveSetAt || min !== liveMinutes) {
+          liveSetAt   = setAt;
+          liveMinutes = min;
+          if (liveInterval) clearInterval(liveInterval);
+          liveTick();
+          liveInterval = setInterval(liveTick, 500);
+        }
+
+        document.getElementById('liveCard').classList.add('visible');
+      }
+
+      function liveTick() {
+        if (!liveSetAt || !liveMinutes) return;
+
+        const totalMs  = liveMinutes * 60 * 1000;
+        const endMs    = liveSetAt * 1000 + totalMs;
+        const now      = Date.now();
+        const timeLeft = endMs - now;
+        const elapsed  = now - liveSetAt * 1000;
+
+        const timeEl   = document.getElementById('liveTime');
+        const overtime = document.getElementById('liveOvertime');
+        const bar      = document.getElementById('liveBar');
+        const card     = document.getElementById('liveCard');
+
+        document.getElementById('liveDuration').textContent = `Duration: ${liveMinutes} min`;
+        document.getElementById('liveElapsed').textContent  = `Elapsed: ${formatMs(Math.max(0, elapsed))}`;
+
+        if (timeLeft <= 0) {
+          timeEl.className   = 'live-time expired';
+          timeEl.textContent = 'TIME HAS EXPIRED';
+          bar.style.width    = '0%';
+          bar.style.background   = 'var(--danger)';
+          card.style.borderColor = 'rgba(224,82,82,0.4)';
+          const past = Math.abs(timeLeft);
+          const pm   = Math.floor(past / 60000);
+          const ps   = Math.floor((past % 60000) / 1000);
+          overtime.className   = 'live-overtime show';
+          overtime.textContent = pm > 0 ? `${pm} min ${pad(ps)}s past time` : `${pad(ps)}s past time`;
+          return;
+        }
+
+        const h = Math.floor(timeLeft / 3600000);
+        const m = Math.floor((timeLeft % 3600000) / 60000);
+        const s = Math.floor((timeLeft % 60000) / 1000);
+        timeEl.className   = 'live-time';
+        timeEl.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+        overtime.className = 'live-overtime';
+
+        const pct = (timeLeft / totalMs) * 100;
+        bar.style.width = pct + '%';
+
+        if (pct <= 10) {
+          bar.style.background   = 'var(--danger)';
+          card.style.borderColor = 'rgba(224,82,82,0.35)';
+        } else if (pct <= 25) {
+          bar.style.background   = 'var(--warn)';
+          card.style.borderColor = 'rgba(224,152,50,0.35)';
+        } else if (pct <= 50) {
+          bar.style.background   = '#c8a030';
+          card.style.borderColor = 'rgba(200,160,48,0.3)';
+        } else {
+          bar.style.background   = 'var(--gold)';
+          card.style.borderColor = 'var(--card-border)';
+        }
+      }
+
+      // ════════════════════════════════════════════
+      // POLL SERVER
+      // ════════════════════════════════════════════
+      async function pollState() {
+        try {
+          const res  = await fetch(STATE_URL + '?t=' + Date.now());
+          const data = await res.json();
+
+          document.getElementById('statusDot').className    = 'status-dot live';
+          document.getElementById('statusText').textContent = 'Connected';
+
+          const cmd = data.command || 'idle';
+          const min = data.minutes || 0;
+
+          document.getElementById('serverState').textContent =
+            cmd === 'start' ? `${min} min active`
+            : cmd === 'reset' ? 'Reset' : 'Idle';
+
+          document.getElementById('currentState').innerHTML =
+            cmd === 'start'
+              ? `Screen is running a <span>${min}-minute</span> timer`
+              : cmd === 'reset'
+              ? `Screen has been <span>reset</span>`
+              : `Screen is <span>idle</span>`;
+
+          applyLiveState(data);
+
+        } catch (e) {
+          document.getElementById('statusDot').className    = 'status-dot error';
+          document.getElementById('statusText').textContent = 'Cannot reach server';
+          document.getElementById('serverState').textContent = '—';
+        }
+      }
+
+      document.getElementById('minutesInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') sendStart();
+      });
+    </script>
+  </body>
+</html>
