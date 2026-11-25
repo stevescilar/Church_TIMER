@@ -6,31 +6,40 @@
     <title>Church Timer — Advancement</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        --gold: #a8793e;
-        --gold-light: #c9a15c;
-        --card-bg: rgba(255, 253, 246, 0.88);
-        --card-border: rgba(168, 124, 63, 0.28);
-        --text: #2b2013;
-        --text-muted: rgba(43, 32, 19, 0.6);
-        --danger: #c73e3e;
-        --warn: #c07816;
-        --radius: 20px;
+        --bg: #f4f2ed;
+        --surface: #ffffff;
+        --surface-muted: #f8f6f2;
+        --border: #e2ded5;
+        --accent: #9a6b2f;
+        --accent-hover: #835924;
+        --accent-soft: #f5efe6;
+        --text: #1c1917;
+        --text-muted: #78716c;
+        --danger: #c93b3b;
+        --warn: #c97a16;
+        --success: #25855a;
+        --radius: 14px;
       }
 
-      html, body { height: 100%; overflow: hidden; font-family: "Inter", sans-serif; background: #f5efe0; }
+      html, body {
+        height: 100%; overflow: hidden;
+        font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+        background: var(--bg); color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
 
       #videoBg {
         position: fixed; inset: 0; width: 100%; height: 100%;
-        object-fit: cover; z-index: 0; opacity: 0.8;
+        object-fit: cover; z-index: 0; opacity: 0.75;
       }
       .overlay {
         position: fixed; inset: 0; z-index: 1;
-        background: radial-gradient(ellipse at center, rgba(255,253,246,0.35) 0%, rgba(245,239,224,0.65) 100%);
+        background: rgba(244, 242, 237, 0.72);
       }
 
       .screen {
@@ -39,120 +48,216 @@
       }
       .screen.active { display: flex; }
 
-      /* ── Entry screen ── */
+      /* Entry screen */
       .entry-card {
-        background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: var(--radius); padding: 2.5rem 2.75rem;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 2.25rem 2.25rem;
         width: 100%; max-width: 400px; text-align: center;
-        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 0 80px rgba(200,169,110,0.08), inset 0 1px 0 rgba(200,169,110,0.12);
+        box-shadow: 0 4px 20px rgba(28, 25, 23, 0.08);
       }
       .entry-title {
-        font-family: "Cinzel", serif; font-size: 1.1rem; font-weight: 600;
-        color: var(--gold); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.4rem;
+        font-family: "Barlow", sans-serif; font-size: 1.35rem; font-weight: 600;
+        color: var(--text); letter-spacing: -0.01em; margin-bottom: 0.25rem;
       }
       .entry-subtitle {
-        font-size: 0.75rem; color: var(--text-muted);
-        letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2rem;
+        font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;
       }
       .entry-card label {
-        font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.1em;
-        text-transform: uppercase; display: block; text-align: left; margin-bottom: 0.5rem;
+        font-size: 0.8rem; font-weight: 500; color: var(--text-muted);
+        display: block; text-align: left; margin-bottom: 0.45rem;
       }
       .entry-card input[type="number"] {
-        width: 100%; padding: 12px 16px; font-size: 1.5rem;
-        font-family: "Inter", sans-serif; font-weight: 300; text-align: center;
-        background: rgba(168,124,63,0.10); border: 1px solid var(--card-border);
+        width: 100%; padding: 12px 16px; font-size: 1.75rem;
+        font-family: "Barlow", sans-serif; font-weight: 600;
+        font-variant-numeric: tabular-nums; text-align: center;
+        background: var(--surface-muted); border: 1px solid var(--border);
         border-radius: 10px; color: var(--text); outline: none;
-        margin-bottom: 1.25rem; letter-spacing: 0.05em; -moz-appearance: textfield;
+        margin-bottom: 1rem; -moz-appearance: textfield;
       }
       .entry-card input[type="number"]::-webkit-outer-spin-button,
       .entry-card input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
       .entry-card input[type="number"]:focus {
-        border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,169,110,0.12);
+        border-color: var(--accent); background: #fff;
       }
       .start-btn {
-        width: 100%; padding: 13px; font-size: 0.8rem;
-        font-family: "Cinzel", serif; font-weight: 600;
-        letter-spacing: 0.15em; text-transform: uppercase;
-        background: linear-gradient(135deg, #b8955a 0%, #d4aa72 50%, #b8955a 100%);
-        border: none; border-radius: 10px; color: #1a0f00; cursor: pointer;
-        margin-bottom: 1.5rem; transition: opacity 0.2s, transform 0.15s;
+        width: 100%; padding: 13px; font-size: 0.92rem;
+        font-family: inherit; font-weight: 600;
+        background: var(--accent); border: none; border-radius: 10px;
+        color: #fff; cursor: pointer;
+        margin-bottom: 1.25rem; transition: background 0.15s, transform 0.1s;
       }
-      .start-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-      .start-btn:active { transform: scale(0.98); }
+      .start-btn:hover { background: var(--accent-hover); }
+      .start-btn:active { transform: scale(0.99); }
 
       .divider {
-        display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;
+        display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
       }
       .divider span {
-        font-size: 0.65rem; color: var(--text-muted);
-        letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap;
+        font-size: 0.78rem; color: var(--text-muted); white-space: nowrap;
       }
       .divider::before, .divider::after {
-        content: ""; flex: 1; height: 1px; background: var(--card-border);
+        content: ""; flex: 1; height: 1px; background: var(--border);
       }
       .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
       .quick-btn {
-        padding: 9px 8px; font-size: 0.75rem; font-family: "Inter", sans-serif;
-        font-weight: 400; background: rgba(168,124,63,0.10);
-        border: 1px solid var(--card-border); border-radius: 8px;
-        color: var(--gold-light); cursor: pointer;
+        padding: 9px 8px; font-size: 0.82rem; font-family: inherit;
+        font-weight: 500; background: var(--surface-muted);
+        border: 1px solid var(--border); border-radius: 8px;
+        color: var(--text); cursor: pointer;
         transition: background 0.15s, border-color 0.15s;
       }
-      .quick-btn:hover { background: rgba(200,169,110,0.14); border-color: rgba(200,169,110,0.45); }
+      .quick-btn:hover { background: var(--accent-soft); border-color: #d6c3a8; }
 
-      /* ── Remote status badge ── */
+      /* Remote status badge */
       .remote-badge {
-        display: inline-flex; align-items: center; gap: 6px;
-        font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em;
-        text-transform: uppercase; margin-bottom: 1.5rem;
+        display: inline-flex; align-items: center; gap: 7px;
+        font-size: 0.78rem; font-weight: 500; color: var(--text-muted);
+        background: var(--surface-muted); border: 1px solid var(--border);
+        border-radius: 99px; padding: 4px 12px; margin-bottom: 1.4rem;
       }
       .remote-dot {
-        width: 7px; height: 7px; border-radius: 50%;
-        background: #3a3a5a; transition: background 0.4s;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #cbc5b9; transition: background 0.3s;
       }
-      .remote-dot.live { background: #52e07a; box-shadow: 0 0 6px rgba(82,224,122,0.6); }
+      .remote-dot.live { background: var(--success); }
 
-      /* ── Timer screen ── */
+      /* Timer screen */
       .timer-card {
-        background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: var(--radius); padding: 4rem 4rem 3rem;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 3.5rem 4rem 2.75rem;
         width: 100%; max-width: 1300px; text-align: center;
-        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-        box-shadow: 0 0 140px rgba(200,169,110,0.08), inset 0 1px 0 rgba(200,169,110,0.12);
-        transition: border-color 0.6s ease;
+        box-shadow: 0 8px 30px rgba(28, 25, 23, 0.08);
+        transition: border-color 0.4s ease;
       }
       .timer-display {
-        font-family: "Cinzel", serif;
-        font-size: clamp(7rem, 24vw, 18rem);
-        font-weight: 400; color: var(--text);
-        letter-spacing: 0.04em; line-height: 1;
-        margin-bottom: 0.5rem; transition: color 0.5s ease;
+        font-family: "Barlow", sans-serif;
+        font-size: clamp(7rem, 23vw, 18rem);
+        font-weight: 600; font-variant-numeric: tabular-nums;
+        color: var(--text); letter-spacing: -0.02em; line-height: 1;
+        margin-bottom: 0.5rem; transition: color 0.4s ease;
       }
       .timer-display.expired {
         color: var(--danger);
-        font-size: clamp(4rem, 11vw, 7.5rem);
-        letter-spacing: 0.15em;
+        font-size: clamp(4rem, 10vw, 7rem);
+        letter-spacing: -0.01em;
       }
       .overtime-row {
-        display: none; font-size: 1.4rem; color: var(--danger);
-        letter-spacing: 0.06em; margin-bottom: 1.5rem;
-        animation: pulse 1.5s ease-in-out infinite;
+        display: none; font-size: 1.45rem; font-weight: 500; color: var(--danger);
+        font-variant-numeric: tabular-nums; margin-bottom: 1.25rem;
       }
-      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
 
-      .ring-wrap { position: relative; width: 100%; margin: 2.5rem 0 2rem; }
+      .ring-wrap { position: relative; width: 100%; margin: 1.5rem 0 2rem; }
+      .runner-track {
+        position: relative; width: 100%; height: 50px; margin-bottom: 6px;
+      }
+      .runner {
+        position: absolute; bottom: 0; left: 20px;
+        width: 48px; height: 48px;
+        transform: translateX(-50%);
+        transition: left 0.8s linear, color 0.8s ease;
+        color: var(--accent);
+        pointer-events: none;
+        --stride: 0.44s;
+        --leg-swing: 36deg;
+        --arm-swing: 34deg;
+        --lean: 12deg;
+        --bounce: -3px;
+      }
+      .runner svg { width: 100%; height: 100%; display: block; overflow: visible; }
+      .runner .pose-done { display: none; }
+      .runner.runner-done .pose-active { display: none; }
+      .runner.runner-done .pose-done { display: block; }
+
+      .runner .runner-body {
+        transform-origin: 24px 33px;
+        animation: runnerBob calc(var(--stride) / 2) ease-in-out infinite alternate;
+      }
+      .runner .leg-front {
+        transform-origin: 24px 33px;
+        animation: swingLeg var(--stride) ease-in-out infinite alternate;
+      }
+      .runner .leg-back {
+        transform-origin: 24px 33px;
+        animation: swingLeg var(--stride) ease-in-out infinite alternate-reverse;
+      }
+      .runner .arm-front {
+        transform-origin: 24px 21px;
+        animation: swingArm var(--stride) ease-in-out infinite alternate-reverse;
+      }
+      .runner .arm-back {
+        transform-origin: 24px 21px;
+        animation: swingArm var(--stride) ease-in-out infinite alternate;
+      }
+
+      .runner .wind-lines { opacity: 0; transition: opacity 0.4s; }
+      .runner.runner-sprint .wind-lines,
+      .runner.runner-jog .wind-lines {
+        opacity: 0.7;
+        animation: windPulse 0.6s ease-in-out infinite alternate;
+      }
+
+      .runner .sweat { opacity: 0; }
+      .runner.runner-tired .sweat,
+      .runner.runner-exhausted .sweat,
+      .runner.runner-done .sweat {
+        animation: sweatDrop 1.3s ease-in infinite;
+      }
+
+      .runner.runner-sprint {
+        --stride: 0.42s; --leg-swing: 38deg; --arm-swing: 36deg; --lean: 13deg; --bounce: -3.5px;
+      }
+      .runner.runner-jog {
+        --stride: 0.70s; --leg-swing: 26deg; --arm-swing: 24deg; --lean: 8deg; --bounce: -2px;
+      }
+      .runner.runner-tired {
+        --stride: 1.25s; --leg-swing: 15deg; --arm-swing: 12deg; --lean: 22deg; --bounce: -1px;
+      }
+      .runner.runner-exhausted {
+        --stride: 1.90s; --leg-swing: 9deg; --arm-swing: 6deg; --lean: 34deg; --bounce: 0px;
+      }
+      .runner.runner-done .done-body {
+        transform-origin: 24px 48px;
+        animation: doneBreathe 1.5s ease-in-out infinite alternate;
+      }
+
+      @keyframes runnerBob {
+        from { transform: translateY(0) rotate(var(--lean)); }
+        to   { transform: translateY(var(--bounce)) rotate(calc(var(--lean) + 2deg)); }
+      }
+      @keyframes swingLeg {
+        from { transform: rotate(var(--leg-swing)); }
+        to   { transform: rotate(calc(-1 * var(--leg-swing))); }
+      }
+      @keyframes swingArm {
+        from { transform: rotate(var(--arm-swing)); }
+        to   { transform: rotate(calc(-1 * var(--arm-swing))); }
+      }
+      @keyframes windPulse {
+        from { opacity: 0.25; transform: translateX(0); }
+        to   { opacity: 0.75; transform: translateX(-3px); }
+      }
+      @keyframes sweatDrop {
+        0%   { opacity: 0; transform: translateY(-2px); }
+        30%  { opacity: 0.9; }
+        100% { opacity: 0; transform: translateY(6px); }
+      }
+      @keyframes doneBreathe {
+        from { transform: scaleY(1); }
+        to   { transform: scaleY(0.95); }
+      }
+
       .progress-bar-bg {
-        background: rgba(168,124,63,0.15); border-radius: 99px; height: 10px; overflow: hidden;
+        background: #eae6dd; border-radius: 99px; height: 10px; overflow: hidden;
       }
       .progress-bar-fill {
-        height: 100%; border-radius: 99px; background: var(--gold);
-        transition: width 0.8s linear, background 0.8s ease; width: 100%;
+        height: 100%; border-radius: 99px; background: var(--accent);
+        transition: width 0.8s linear, background 0.6s ease; width: 100%;
       }
       .timer-actions {
-        display: flex; gap: 14px; justify-content: center; margin-top: 0.5rem;
-        opacity: 0; transition: opacity 0.4s ease;
+        display: flex; gap: 12px; justify-content: center; margin-top: 0.5rem;
+        opacity: 0; transition: opacity 0.3s ease;
       }
       .timer-card:hover .timer-actions,
       .timer-actions:focus-within,
@@ -160,29 +265,147 @@
         opacity: 1;
       }
       .action-btn {
-        padding: 12px 32px; font-size: 0.85rem; letter-spacing: 0.1em;
-        text-transform: uppercase; background: rgba(168,124,63,0.10);
-        border: 1px solid var(--card-border); border-radius: 10px;
+        padding: 10px 24px; font-size: 0.85rem; font-weight: 500;
+        background: var(--surface-muted);
+        border: 1px solid var(--border); border-radius: 8px;
         color: var(--text-muted); cursor: pointer;
-        transition: background 0.15s, color 0.15s; font-family: "Inter", sans-serif;
+        transition: background 0.15s, color 0.15s; font-family: inherit;
       }
       .action-btn:hover {
-        background: rgba(200,169,110,0.13); color: var(--gold-light);
-        border-color: rgba(200,169,110,0.4);
+        background: var(--accent-soft); color: var(--text); border-color: #d6c3a8;
       }
 
       /* Waiting for remote pulse */
       .waiting-pill {
         display: none; align-items: center; gap: 8px;
-        font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.1em;
-        text-transform: uppercase; margin-top: 1.5rem; justify-content: center;
+        font-size: 0.8rem; color: var(--text-muted);
+        margin-top: 1.25rem; justify-content: center;
       }
       .waiting-pill.show { display: flex; }
       .waiting-dot {
-        width: 8px; height: 8px; border-radius: 50%; background: var(--gold);
-        animation: waitpulse 1.2s ease-in-out infinite;
+        width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+        animation: waitpulse 1.4s ease-in-out infinite;
       }
       @keyframes waitpulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+      /* Full-screen Notice / Alert overlay */
+      .notice-overlay {
+        position: fixed; inset: 0; z-index: 50;
+        display: none; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: clamp(1.25rem, 3vh, 2.25rem);
+        padding: clamp(2rem, 5vw, 4.5rem);
+        text-align: center;
+        background: #f6f4ef;
+        color: var(--text);
+        animation: noticeIn 0.25s ease-out;
+      }
+      .notice-overlay.active { display: flex; }
+      .notice-overlay.alert-mode {
+        background: #7f1d1d;
+        color: #ffffff;
+      }
+      @keyframes noticeIn {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      .notice-badge {
+        display: inline-flex; align-items: center;
+        padding: 6px 16px; border-radius: 99px;
+        font-family: inherit; font-size: clamp(0.85rem, 1.3vw, 1rem);
+        font-weight: 600;
+        background: var(--accent-soft);
+        border: 1px solid #dfd0ba;
+        color: var(--accent);
+      }
+      .notice-overlay.alert-mode .notice-badge {
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.32);
+        color: #fecaca;
+      }
+
+      .notice-arc-wrap {
+        position: relative;
+        width: clamp(190px, 24vw, 280px);
+        height: clamp(190px, 24vw, 280px);
+        flex-shrink: 0;
+      }
+      .notice-arc-wrap.hidden { display: none; }
+      .notice-arc-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+      .notice-arc-track {
+        fill: none; stroke: #e5e0d5; stroke-width: 12;
+      }
+      .notice-overlay.alert-mode .notice-arc-track {
+        stroke: rgba(255, 255, 255, 0.2);
+      }
+      .notice-arc-progress {
+        fill: none; stroke: var(--accent); stroke-width: 12;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s linear, stroke 0.5s ease;
+      }
+      .notice-arc-center {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 1.5rem;
+      }
+      .notice-arc-time {
+        font-family: "Barlow", sans-serif;
+        font-size: clamp(2.25rem, 4.4vw, 3.4rem);
+        font-weight: 600; font-variant-numeric: tabular-nums;
+        line-height: 1.05; letter-spacing: -0.02em;
+      }
+      .notice-arc-sub {
+        margin-top: 0.3rem;
+        font-size: clamp(0.75rem, 1.1vw, 0.9rem);
+        font-weight: 500;
+        color: var(--text-muted);
+      }
+      .notice-overlay.alert-mode .notice-arc-sub {
+        color: rgba(255, 255, 255, 0.78);
+      }
+
+      .notice-message {
+        font-family: "Barlow", sans-serif; font-weight: 600;
+        font-size: clamp(2.1rem, 4.8vw, 4.3rem);
+        line-height: 1.18; max-width: 1100px;
+        letter-spacing: -0.015em;
+        overflow-wrap: break-word; word-break: break-word;
+      }
+
+      .notice-footer {
+        display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
+        min-height: 2.75rem;
+      }
+      .notice-countdown-hint {
+        font-size: 0.85rem; color: var(--text-muted);
+      }
+      .notice-overlay.alert-mode .notice-countdown-hint {
+        color: rgba(255, 255, 255, 0.72);
+      }
+      .notice-dismiss-btn {
+        padding: 9px 22px; font-size: 0.85rem; font-weight: 500;
+        font-family: inherit;
+        background: var(--surface);
+        border: 1px solid var(--border); border-radius: 8px;
+        color: var(--text-muted); cursor: pointer;
+        opacity: 0; transition: opacity 0.25s ease, background 0.15s, color 0.15s;
+      }
+      .notice-overlay:hover .notice-dismiss-btn,
+      .notice-overlay.show-controls .notice-dismiss-btn,
+      .notice-dismiss-btn:focus { opacity: 1; }
+      .notice-dismiss-btn:hover {
+        background: var(--accent-soft); color: var(--text);
+      }
+      .notice-overlay.alert-mode .notice-dismiss-btn {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.28);
+        color: #fff;
+      }
+      .notice-overlay.alert-mode .notice-dismiss-btn:hover {
+        background: rgba(255, 255, 255, 0.22);
+      }
     </style>
   </head>
   <body>
@@ -204,7 +427,7 @@
 
         <label for="minutesInput">Duration (minutes)</label>
         <input type="number" id="minutesInput" placeholder="45" min="1" />
-        <button class="start-btn" onclick="startTimerLocal()">Begin Session</button>
+        <button class="start-btn" onclick="startTimerLocal()">Start timer</button>
 
         <div class="divider"><span>Quick set</span></div>
         <div class="quick-grid">
@@ -229,14 +452,69 @@
         <div class="timer-display" id="timeDisplay">00:00:00</div>
         <div class="overtime-row" id="overtimeRow" aria-live="polite"></div>
         <div class="ring-wrap">
+          <div class="runner-track" aria-hidden="true">
+            <div class="runner runner-sprint" id="timerRunner">
+              <svg viewBox="0 0 48 52" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                <g class="pose-active">
+                  <g class="wind-lines" stroke-width="1.8">
+                    <line x1="4" y1="16" x2="12" y2="16" />
+                    <line x1="2" y1="22" x2="10" y2="22" />
+                  </g>
+                  <g class="runner-body">
+                    <line x1="24" y1="19" x2="24" y2="33" />
+                    <circle cx="24" cy="13" r="4.6" />
+                    <path class="arm-back" d="M24,21 L20,27 L26,30" opacity="0.55" />
+                    <path class="arm-front" d="M24,21 L20,27 L26,30" />
+                    <path class="sweat" d="M31,9 Q33,12 31,14 Q29,12 31,9 Z" fill="currentColor" stroke="none" />
+                  </g>
+                  <path class="leg-back" d="M24,33 L27,41 L23,49" opacity="0.55" />
+                  <path class="leg-front" d="M24,33 L27,41 L23,49" />
+                </g>
+                <g class="pose-done">
+                  <g class="done-body">
+                    <path d="M18,48 L27,43 L32,49" opacity="0.55" />
+                    <path d="M18,48 L29,43 L34,49" />
+                    <path d="M18,48 Q20,37 26,35" />
+                    <circle cx="29" cy="31" r="4.6" />
+                    <path d="M25,36 L29,43" />
+                    <path class="sweat" d="M35,28 Q37,31 35,33 Q33,31 35,28 Z" fill="currentColor" stroke="none" />
+                  </g>
+                </g>
+              </svg>
+            </div>
+          </div>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBar"></div>
           </div>
         </div>
         <div class="timer-actions">
-          <button class="action-btn" onclick="resetTimer()">← Reset</button>
-          <button class="action-btn" id="fsBtn" onclick="toggleFullscreen()">⤢ Fullscreen</button>
+          <button class="action-btn" onclick="resetTimer()">Reset</button>
+          <button class="action-btn" id="fsBtn" onclick="toggleFullscreen()">Fullscreen</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Full-screen Notice / Alert overlay -->
+    <div id="noticeOverlay" class="notice-overlay" role="alertdialog" aria-live="assertive">
+      <div class="notice-badge" id="noticeBadge">Notice</div>
+
+      <div class="notice-arc-wrap hidden" id="noticeArcWrap">
+        <svg class="notice-arc-svg" viewBox="0 0 240 240" aria-hidden="true">
+          <circle class="notice-arc-track" id="noticeArcTrack" cx="120" cy="120" r="104" />
+          <circle class="notice-arc-progress" id="noticeArcProgress" cx="120" cy="120" r="104"
+            transform="rotate(-90 120 120)" />
+        </svg>
+        <div class="notice-arc-center">
+          <div class="notice-arc-time" id="noticeArcTime">00:00</div>
+          <div class="notice-arc-sub" id="noticeArcSub">min left</div>
+        </div>
+      </div>
+
+      <div class="notice-message" id="noticeMessage"></div>
+
+      <div class="notice-footer">
+        <div class="notice-countdown-hint" id="noticeCountdownHint"></div>
+        <button class="notice-dismiss-btn" onclick="dismissNoticeLocal()">Dismiss</button>
       </div>
     </div>
 
@@ -244,22 +522,23 @@
       // ── Config ──────────────────────────────────────────────
       const STATE_URL = 'state.php';   // same folder
       const POLL_MS   = 2500;          // poll every 2.5 seconds
+      const ARC_CIRCUMFERENCE = 2 * Math.PI * 104;
       // ────────────────────────────────────────────────────────
 
       let timerInterval = null;
       let pollInterval  = null;
       let countdownTime = 0;
       let countdownEndTime = 0;
-      let startedAt = 0;
       let lastSetAt = 0;   // track which command we've already acted on
+      let clockOffsetMs = 0;
+
+      let activeNotice = null;
+      let activeNoticeId = null;
+      let dismissedNoticeId = null;
+      let noticeInterval = null;
 
       function pad(n) { return String(n).padStart(2, '0'); }
-      function formatMs(ms) {
-        const h = Math.floor(ms / 3600000);
-        const m = Math.floor((ms % 3600000) / 60000);
-        const s = Math.floor((ms % 60000) / 1000);
-        return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
-      }
+      function getNowMs() { return Date.now() + clockOffsetMs; }
 
       // ── Remote polling ───────────────────────────────────────
       async function pollState() {
@@ -267,19 +546,26 @@
           const res  = await fetch(STATE_URL + '?t=' + Date.now());
           const data = await res.json();
 
+          if (data.serverTime) {
+            clockOffsetMs = data.serverTime * 1000 - Date.now();
+          }
+
           // Mark connection live
           document.getElementById('remoteDot').classList.add('live');
           document.getElementById('remoteStatus').textContent = 'Remote connected';
 
-          // Only act on commands we haven't seen yet
+          // Only act on timer commands we haven't seen yet
           if (data.setAt && data.setAt !== lastSetAt) {
             lastSetAt = data.setAt;
             if (data.command === 'start' && data.minutes > 0) {
-              startTimer(data.minutes);
-            } else if (data.command === 'reset') {
+              startTimer(data.minutes, data.setAt);
+            } else if (data.command === 'reset' || data.command === 'idle') {
               resetTimer();
             }
           }
+
+          // Always sync notice overlay state
+          syncNotice(data.notice || null);
         } catch (e) {
           document.getElementById('remoteDot').classList.remove('live');
           document.getElementById('remoteStatus').textContent = 'Remote offline';
@@ -304,19 +590,45 @@
         startTimer(val);
       }
 
-      function startTimer(minutes) {
+      function updateRunner(pct) {
+        const runner = document.getElementById('timerRunner');
+        if (!runner) return;
+
+        const clampedPct = Math.max(0, Math.min(100, pct));
+        const elapsed = 100 - clampedPct;
+        runner.style.left = `clamp(20px, ${elapsed}%, calc(100% - 20px))`;
+
+        if (clampedPct <= 0) {
+          runner.className = 'runner runner-done';
+          runner.style.color = 'var(--danger)';
+        } else if (clampedPct <= 10) {
+          runner.className = 'runner runner-exhausted';
+          runner.style.color = 'var(--danger)';
+        } else if (clampedPct <= 25) {
+          runner.className = 'runner runner-tired';
+          runner.style.color = 'var(--warn)';
+        } else if (clampedPct <= 50) {
+          runner.className = 'runner runner-jog';
+          runner.style.color = '#c9932c';
+        } else {
+          runner.className = 'runner runner-sprint';
+          runner.style.color = 'var(--accent)';
+        }
+      }
+
+      function startTimer(minutes, setAtSec = null) {
         countdownTime    = minutes * 60 * 1000;
-        countdownEndTime = Date.now() + countdownTime;
-        startedAt        = Date.now();
+        countdownEndTime = setAtSec ? (setAtSec * 1000 + countdownTime) : (getNowMs() + countdownTime);
 
         const display = document.getElementById('timeDisplay');
         display.className = 'timer-display';
         display.textContent = '00:00:00';
 
         document.getElementById('progressBar').style.width = '100%';
-        document.getElementById('progressBar').style.background = 'var(--gold)';
-        document.getElementById('timerCard').style.borderColor = 'var(--card-border)';
+        document.getElementById('progressBar').style.background = 'var(--accent)';
+        document.getElementById('timerCard').style.borderColor = 'var(--border)';
         document.getElementById('overtimeRow').style.display = 'none';
+        updateRunner(100);
 
         showScreen('timerScreen');
 
@@ -326,22 +638,24 @@
       }
 
       function tick() {
-        const now      = Date.now();
+        const now      = getNowMs();
         const timeLeft = countdownEndTime - now;
 
         if (timeLeft <= 0) {
           const display = document.getElementById('timeDisplay');
           display.className = 'timer-display expired';
-          display.textContent = 'TIME HAS EXPIRED';
+          display.textContent = 'Time expired';
           document.getElementById('progressBar').style.width = '0%';
           document.getElementById('progressBar').style.background = 'var(--danger)';
-          document.getElementById('timerCard').style.borderColor = 'rgba(224,82,82,0.4)';
+          document.getElementById('timerCard').style.borderColor = '#e6b8b8';
           const past = Math.abs(timeLeft);
           const min  = Math.floor(past / 60000);
           const sec  = Math.floor((past % 60000) / 1000);
           const row  = document.getElementById('overtimeRow');
           row.style.display = 'block';
           row.textContent = min > 0 ? `${min} min ${pad(sec)}s past time` : `${pad(sec)}s past time`;
+          updateRunner(0);
+          if (activeNotice) updateNoticeDisplay();
           return;
         }
 
@@ -350,27 +664,172 @@
         const s   = Math.floor((timeLeft % 60000) / 1000);
         document.getElementById('timeDisplay').textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
 
-        const pct = (timeLeft / countdownTime) * 100;
+        const pct = Math.max(0, Math.min(100, (timeLeft / countdownTime) * 100));
         document.getElementById('progressBar').style.width = pct + '%';
 
         const bar  = document.getElementById('progressBar');
         const card = document.getElementById('timerCard');
         if (pct <= 10) {
-          bar.style.background = 'var(--danger)'; card.style.borderColor = 'rgba(224,82,82,0.35)';
+          bar.style.background = 'var(--danger)'; card.style.borderColor = '#e6b8b8';
         } else if (pct <= 25) {
-          bar.style.background = 'var(--warn)'; card.style.borderColor = 'rgba(224,152,50,0.35)';
+          bar.style.background = 'var(--warn)'; card.style.borderColor = '#ebd0a4';
         } else if (pct <= 50) {
-          bar.style.background = '#c8a030'; card.style.borderColor = 'rgba(200,160,48,0.3)';
+          bar.style.background = '#c9932c'; card.style.borderColor = '#e6d8bd';
         } else {
-          bar.style.background = 'var(--gold)'; card.style.borderColor = 'var(--card-border)';
+          bar.style.background = 'var(--accent)'; card.style.borderColor = 'var(--border)';
         }
+
+        updateRunner(pct);
+        if (activeNotice) updateNoticeDisplay();
       }
 
       function resetTimer() {
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = null;
+        countdownTime = 0;
+        countdownEndTime = 0;
+        updateRunner(100);
         showScreen('entryScreen');
+        if (activeNotice) updateNoticeDisplay();
       }
+
+      // ── Notice / Alert overlay ───────────────────────────────
+      function syncNotice(notice) {
+        if (!notice || !notice.active || !notice.message) {
+          dismissedNoticeId = null;
+          hideNoticeOverlay();
+          return;
+        }
+
+        const noticeId = notice.id || `${notice.sentAt || 0}:${notice.message}`;
+        const expiresAtMs = (notice.duration > 0 && notice.sentAt)
+          ? (notice.sentAt + notice.duration) * 1000
+          : 0;
+
+        if (expiresAtMs && getNowMs() >= expiresAtMs) {
+          hideNoticeOverlay();
+          return;
+        }
+
+        if (noticeId === dismissedNoticeId) {
+          return;
+        }
+
+        activeNotice = notice;
+        if (noticeId !== activeNoticeId) {
+          activeNoticeId = noticeId;
+          const overlay = document.getElementById('noticeOverlay');
+          const isAlert = notice.type === 'alert';
+          overlay.classList.toggle('alert-mode', isAlert);
+          document.getElementById('noticeBadge').textContent = isAlert ? 'Alert' : 'Notice';
+          document.getElementById('noticeMessage').textContent = notice.message;
+          overlay.classList.add('active');
+        }
+
+        updateNoticeDisplay();
+        if (!noticeInterval) {
+          noticeInterval = setInterval(updateNoticeDisplay, 500);
+        }
+      }
+
+      function updateNoticeDisplay() {
+        if (!activeNotice) return;
+
+        const now = getNowMs();
+        const expiresAtMs = (activeNotice.duration > 0 && activeNotice.sentAt)
+          ? (activeNotice.sentAt + activeNotice.duration) * 1000
+          : 0;
+
+        if (expiresAtMs && now >= expiresAtMs) {
+          hideNoticeOverlay();
+          return;
+        }
+
+        const hint = document.getElementById('noticeCountdownHint');
+        if (expiresAtMs) {
+          const secsLeft = Math.max(1, Math.ceil((expiresAtMs - now) / 1000));
+          hint.textContent = `Auto-closing in ${secsLeft}s`;
+        } else {
+          hint.textContent = '';
+        }
+
+        const arcWrap  = document.getElementById('noticeArcWrap');
+        const arcProg  = document.getElementById('noticeArcProgress');
+        const arcTrack = document.getElementById('noticeArcTrack');
+        const arcTime  = document.getElementById('noticeArcTime');
+        const arcSub   = document.getElementById('noticeArcSub');
+
+        if (!countdownTime || !countdownEndTime) {
+          arcWrap.classList.add('hidden');
+          return;
+        }
+
+        arcWrap.classList.remove('hidden');
+        arcProg.style.strokeDasharray = ARC_CIRCUMFERENCE;
+
+        const isAlert  = activeNotice.type === 'alert';
+        const timeLeft = countdownEndTime - now;
+
+        if (timeLeft <= 0) {
+          arcProg.style.strokeDashoffset = ARC_CIRCUMFERENCE;
+          arcTrack.style.stroke = isAlert ? 'rgba(255, 255, 255, 0.35)' : 'rgba(201, 59, 59, 0.35)';
+          arcTime.textContent = '00:00';
+          arcTime.style.color = isAlert ? '#fecaca' : 'var(--danger)';
+
+          const past = Math.abs(timeLeft);
+          const pm   = Math.floor(past / 60000);
+          const ps   = Math.floor((past % 60000) / 1000);
+          arcSub.textContent = pm > 0 ? `+${pm}m ${pad(ps)}s over` : `+${pad(ps)}s over`;
+          return;
+        }
+
+        arcTrack.style.stroke = '';
+        arcTime.style.color = '';
+
+        const frac = Math.max(0, Math.min(1, timeLeft / countdownTime));
+        const pct  = frac * 100;
+        arcProg.style.strokeDashoffset = ARC_CIRCUMFERENCE * (1 - frac);
+
+        if (pct <= 10) {
+          arcProg.style.stroke = isAlert ? '#fca5a5' : 'var(--danger)';
+        } else if (pct <= 25) {
+          arcProg.style.stroke = isAlert ? '#fcd34d' : 'var(--warn)';
+        } else {
+          arcProg.style.stroke = isAlert ? '#ffffff' : 'var(--accent)';
+        }
+
+        const h = Math.floor(timeLeft / 3600000);
+        const m = Math.floor((timeLeft % 3600000) / 60000);
+        const s = Math.floor((timeLeft % 60000) / 1000);
+        arcTime.textContent = h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+
+        if (timeLeft >= 60000) {
+          arcSub.textContent = `${Math.ceil(timeLeft / 60000)} min left`;
+        } else {
+          arcSub.textContent = `${Math.ceil(timeLeft / 1000)} sec left`;
+        }
+      }
+
+      function hideNoticeOverlay() {
+        activeNotice = null;
+        activeNoticeId = null;
+        if (noticeInterval) { clearInterval(noticeInterval); noticeInterval = null; }
+        document.getElementById('noticeOverlay').classList.remove('active', 'alert-mode', 'show-controls');
+      }
+
+      function dismissNoticeLocal() {
+        if (activeNoticeId) dismissedNoticeId = activeNoticeId;
+        hideNoticeOverlay();
+      }
+
+      let noticeControlsTimer = null;
+      document.getElementById('noticeOverlay').addEventListener('click', e => {
+        if (e.target.closest('.notice-dismiss-btn')) return;
+        const overlay = document.getElementById('noticeOverlay');
+        overlay.classList.add('show-controls');
+        clearTimeout(noticeControlsTimer);
+        noticeControlsTimer = setTimeout(() => overlay.classList.remove('show-controls'), 4000);
+      });
 
       function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -386,7 +845,7 @@
       }
       document.addEventListener('fullscreenchange', () => {
         document.getElementById('fsBtn').textContent =
-          document.fullscreenElement ? '✕ Exit fullscreen' : '⤢ Fullscreen';
+          document.fullscreenElement ? 'Exit fullscreen' : 'Fullscreen';
       });
 
       document.getElementById('minutesInput').addEventListener('keydown', e => {

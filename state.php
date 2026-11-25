@@ -4,14 +4,18 @@
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 $stateFile = __DIR__ . '/state.json';
 $pinFile   = __DIR__ . '/pin.json';   // stores the hashed PIN
 
-// ── Default PIN is 1234 (change via ?action=set-pin after deploy) ──
-// To change PIN: POST { "command": "set-pin", "pin": "YOURPIN" }
+// ── Default PIN is 1234 (change via POST { "command": "set-pin", "pin": "CURRENT", "new_pin": "NEWPIN" }) ──
 $defaultPin = password_hash('1234', PASSWORD_DEFAULT);
 
 // ── Default state ──
@@ -19,7 +23,24 @@ $defaultState = [
     'minutes' => 0,
     'command' => 'idle',
     'setAt'   => 0,
+    'notice'  => null,
 ];
+
+function strLength($str) {
+    return function_exists('mb_strlen') ? mb_strlen($str, 'UTF-8') : strlen($str);
+}
+
+function normalizeNotice($notice, $now) {
+    if (!is_array($notice) || empty($notice['active'])) {
+        return null;
+    }
+    $duration = intval($notice['duration'] ?? 0);
+    $sentAt   = intval($notice['sentAt'] ?? 0);
+    if ($duration > 0 && $sentAt > 0 && $now >= ($sentAt + $duration)) {
+        return null;
+    }
+    return $notice;
+}
 
 function readState($file, $default) {
     if (!file_exists($file)) return $default;
@@ -41,7 +62,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // ── GET — timer page polls this (no auth needed) ──
 if ($method === 'GET') {
-    echo json_encode(readState($stateFile, $defaultState));
+    $now = time();
+    $state = readState($stateFile, $defaultState);
+    $state['notice'] = normalizeNotice($state['notice'] ?? null, $now);
+    $state['serverTime'] = $now;
+    echo json_encode($state);
     exit;
 }
 
@@ -98,6 +123,48 @@ if ($method === 'POST') {
         exit;
     }
 
+    // ── Send screen notice / alert (preserves running timer) ──
+    if ($command === 'send-notice') {
+        $message = trim(strval($body['message'] ?? ''));
+        $len = strLength($message);
+        if ($len < 1 || $len > 240) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Message must be 1–240 characters']);
+            exit;
+        }
+
+        $type = ($body['type'] ?? 'notice') === 'alert' ? 'alert' : 'notice';
+        $duration = max(0, min(600, intval($body['duration'] ?? 0)));
+        $now = time();
+
+        $state = readState($stateFile, $defaultState);
+        $state['notice'] = [
+            'id'       => bin2hex(random_bytes(4)),
+            'active'   => true,
+            'message'  => $message,
+            'type'     => $type,
+            'sentAt'   => $now,
+            'duration' => $duration,
+        ];
+
+        writeState($stateFile, $state);
+        $state['serverTime'] = $now;
+        echo json_encode(['ok' => true, 'state' => $state]);
+        exit;
+    }
+
+    // ── Clear screen notice / alert ──
+    if ($command === 'clear-notice') {
+        $now = time();
+        $state = readState($stateFile, $defaultState);
+        $state['notice'] = null;
+
+        writeState($stateFile, $state);
+        $state['serverTime'] = $now;
+        echo json_encode(['ok' => true, 'state' => $state]);
+        exit;
+    }
+
     // ── Timer commands: start / reset / idle ──
     $minutes = intval($body['minutes'] ?? 0);
 
@@ -112,13 +179,16 @@ if ($method === 'POST') {
         exit;
     }
 
+    $now = time();
     $state = [
         'minutes' => $minutes,
         'command' => $command,
-        'setAt'   => time(),
+        'setAt'   => $now,
+        'notice'  => null,
     ];
 
     writeState($stateFile, $state);
+    $state['serverTime'] = $now;
     echo json_encode(['ok' => true, 'state' => $state]);
     exit;
 }

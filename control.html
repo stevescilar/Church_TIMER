@@ -6,285 +6,364 @@
     <title>Timer Remote — Advancement</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
       :root {
-        --gold: #a8793e;
-        --gold-light: #c9a15c;
-        --card-bg: rgba(255, 253, 246, 0.92);
-        --card-border: rgba(168, 124, 63, 0.25);
-        --text: #2b2013;
-        --text-muted: rgba(43, 32, 19, 0.58);
-        --danger: #c73e3e;
-        --warn: #c07816;
-        --success: #2f9e5c;
-        --radius: 16px;
+        --bg: #f4f2ed;
+        --surface: #ffffff;
+        --surface-muted: #f8f6f2;
+        --border: #e2ded5;
+        --accent: #9a6b2f;
+        --accent-hover: #835924;
+        --accent-soft: #f5efe6;
+        --text: #1c1917;
+        --text-muted: #78716c;
+        --danger: #c93b3b;
+        --warn: #c97a16;
+        --success: #25855a;
+        --radius: 12px;
       }
 
       html, body {
-        min-height: 100%; font-family: "Inter", sans-serif;
-        background: #f5efe0;
-        background-image:
-          radial-gradient(ellipse at 20% 20%, rgba(168,124,63,0.10) 0%, transparent 60%),
-          radial-gradient(ellipse at 80% 80%, rgba(150,120,200,0.06) 0%, transparent 60%);
+        min-height: 100%;
+        font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+        background: var(--bg);
         color: var(--text);
+        -webkit-font-smoothing: antialiased;
       }
 
-      /* Grain overlay */
-      body::before {
-        content: "";
-        position: fixed; inset: 0; z-index: 0; pointer-events: none;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-        opacity: 0.25;
+      .page {
+        max-width: 440px; margin: 0 auto;
+        padding: 1.5rem 1.25rem 3.5rem;
+        display: none;
       }
-
-      .page { position: relative; z-index: 1; max-width: 440px; margin: 0 auto; padding: 2rem 1.25rem 4rem; display: none; }
       .page.unlocked { display: block; }
 
-      /* Header */
-      .page-header { text-align: center; margin-bottom: 2.5rem; padding-top: 1rem; }
-      .page-header .crown {
-        font-size: 1.4rem; margin-bottom: 0.5rem; opacity: 0.8;
+      /* Top bar */
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1rem; margin-bottom: 1.25rem;
       }
       .page-title {
-        font-family: "Cinzel", serif; font-size: 1rem; font-weight: 700;
-        letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold);
-        margin-bottom: 0.25rem;
+        font-family: "Barlow", sans-serif; font-size: 1.25rem; font-weight: 600;
+        color: var(--text); letter-spacing: -0.01em; line-height: 1.2;
       }
       .page-sub {
-        font-size: 0.65rem; color: var(--text-muted);
-        letter-spacing: 0.12em; text-transform: uppercase;
+        font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;
+      }
+
+      /* Lock button */
+      .lock-badge {
+        display: none;
+        font-size: 0.8rem; font-weight: 500; color: var(--text-muted);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 8px; padding: 6px 12px; cursor: pointer;
+        font-family: inherit;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
+      }
+      .lock-badge:hover {
+        color: var(--danger); border-color: #eab8b8; background: #fdf6f6;
       }
 
       /* Status bar */
       .status-bar {
         display: flex; align-items: center; justify-content: space-between;
-        background: rgba(168,124,63,0.10); border: 1px solid var(--card-border);
-        border-radius: 10px; padding: 10px 16px; margin-bottom: 1.5rem;
-        font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase;
-        color: var(--text-muted);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 10px; padding: 10px 14px; margin-bottom: 1rem;
+        font-size: 0.8rem; color: var(--text-muted);
       }
-      .status-live { display: flex; align-items: center; gap: 7px; }
+      .status-live { display: flex; align-items: center; gap: 8px; font-weight: 500; }
       .status-dot {
-        width: 7px; height: 7px; border-radius: 50%;
-        background: #3a3a5a; transition: background 0.4s;
-        flex-shrink: 0;
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #d6d3cd; transition: background 0.3s; flex-shrink: 0;
       }
-      .status-dot.live { background: var(--success); box-shadow: 0 0 8px rgba(82,224,122,0.5); }
+      .status-dot.live { background: var(--success); }
       .status-dot.error { background: var(--danger); }
-      #statusText { transition: color 0.3s; }
 
       /* Card */
       .card {
-        background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: var(--radius); padding: 1.75rem;
-        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-        box-shadow: 0 0 60px rgba(200,169,110,0.05), inset 0 1px 0 rgba(200,169,110,0.1);
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1.25rem;
+        box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
         margin-bottom: 1rem;
       }
       .card-label {
-        font-size: 0.65rem; font-weight: 500; letter-spacing: 0.14em;
-        text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;
-        display: flex; align-items: center; gap: 8px;
-      }
-      .card-label::after {
-        content: ""; flex: 1; height: 1px; background: var(--card-border);
+        font-size: 0.85rem; font-weight: 600; color: var(--text);
+        margin-bottom: 0.9rem;
       }
 
       /* Duration input */
-      .duration-wrap { position: relative; margin-bottom: 1.25rem; }
+      .duration-wrap { position: relative; margin-bottom: 0.9rem; }
       .duration-input {
-        width: 100%; padding: 18px 56px 18px 20px;
-        font-size: 2.5rem; font-family: "Cinzel", serif; font-weight: 400;
-        text-align: center; background: rgba(168,124,63,0.10);
-        border: 1px solid var(--card-border); border-radius: 12px;
-        color: var(--text); outline: none; letter-spacing: 0.05em;
-        -moz-appearance: textfield; transition: border-color 0.2s, box-shadow 0.2s;
+        width: 100%; padding: 14px 52px 14px 16px;
+        font-size: 2.25rem; font-family: "Barlow", sans-serif; font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        text-align: center; background: var(--surface-muted);
+        border: 1px solid var(--border); border-radius: 10px;
+        color: var(--text); outline: none;
+        -moz-appearance: textfield; transition: border-color 0.15s, background 0.15s;
       }
       .duration-input::-webkit-outer-spin-button,
       .duration-input::-webkit-inner-spin-button { -webkit-appearance: none; }
       .duration-input:focus {
-        border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,169,110,0.1);
+        border-color: var(--accent); background: #fff;
       }
       .duration-unit {
-        position: absolute; right: 18px; bottom: 20px;
-        font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
-        color: var(--text-muted); pointer-events: none;
+        position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+        font-size: 0.8rem; font-weight: 500; color: var(--text-muted);
+        pointer-events: none;
       }
 
       /* Quick presets */
-      .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1.5rem; }
+      .presets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
       .preset {
-        padding: 10px 6px; font-size: 0.75rem; text-align: center;
-        background: rgba(200,169,110,0.06); border: 1px solid var(--card-border);
-        border-radius: 8px; color: var(--gold-light); cursor: pointer;
-        transition: background 0.15s, border-color 0.15s, transform 0.1s;
-        font-family: "Inter", sans-serif;
+        padding: 9px 6px; font-size: 0.82rem; font-weight: 500; text-align: center;
+        background: var(--surface-muted); border: 1px solid var(--border);
+        border-radius: 8px; color: var(--text); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+        font-family: inherit;
       }
-      .preset:hover { background: rgba(200,169,110,0.13); border-color: rgba(200,169,110,0.4); }
-      .preset:active { transform: scale(0.96); }
+      .preset:hover { background: var(--accent-soft); border-color: #d6c3a8; }
       .preset.selected {
-        background: rgba(200,169,110,0.18); border-color: var(--gold);
-        color: var(--gold);
+        background: var(--accent-soft); border-color: var(--accent);
+        color: var(--accent); font-weight: 600;
       }
 
-      /* Send button */
+      /* Primary button */
       .send-btn {
-        width: 100%; padding: 15px; font-size: 0.85rem;
-        font-family: "Cinzel", serif; font-weight: 700;
-        letter-spacing: 0.18em; text-transform: uppercase;
-        background: linear-gradient(135deg, #b8955a 0%, #d4aa72 45%, #b8955a 100%);
-        border: none; border-radius: 12px; color: #1a0f00;
-        cursor: pointer; transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-        box-shadow: 0 4px 24px rgba(200,169,110,0.18);
+        width: 100%; padding: 13px 16px; font-size: 0.92rem;
+        font-family: inherit; font-weight: 600;
+        background: var(--accent); border: none; border-radius: 10px;
+        color: #ffffff; cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
       }
-      .send-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 32px rgba(200,169,110,0.25); }
-      .send-btn:active { transform: scale(0.98); }
-      .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+      .send-btn:hover { background: var(--accent-hover); }
+      .send-btn:active { transform: scale(0.99); }
+      .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+      .send-btn.alert-style { background: var(--danger); color: #fff; }
+      .send-btn.alert-style:hover { background: #b13030; }
 
       /* Reset button */
       .reset-btn {
-        width: 100%; padding: 12px; font-size: 0.75rem;
-        font-family: "Inter", sans-serif; font-weight: 400;
-        letter-spacing: 0.1em; text-transform: uppercase;
-        background: transparent; border: 1px solid rgba(224,82,82,0.3);
-        border-radius: 10px; color: rgba(224,82,82,0.7);
-        cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s;
+        width: 100%; padding: 11px 14px; font-size: 0.85rem;
+        font-family: inherit; font-weight: 500;
+        background: transparent; border: 1px solid #e7c2c2;
+        border-radius: 9px; color: var(--danger);
+        cursor: pointer; transition: background 0.15s, border-color 0.15s;
       }
       .reset-btn:hover {
-        background: rgba(224,82,82,0.08); border-color: rgba(224,82,82,0.55);
-        color: var(--danger);
+        background: #fdf4f4; border-color: var(--danger);
+      }
+
+      /* Notice / Alert card */
+      .notice-type-row {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0.85rem;
+      }
+      .notice-type-btn {
+        padding: 8px 10px; font-size: 0.82rem; font-family: inherit; font-weight: 500;
+        background: var(--surface-muted); border: 1px solid var(--border);
+        border-radius: 8px; color: var(--text-muted); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+      .notice-type-btn.active.notice {
+        background: var(--accent-soft); border-color: var(--accent);
+        color: var(--accent); font-weight: 600;
+      }
+      .notice-type-btn.active.alert {
+        background: #fdf2f2; border-color: var(--danger);
+        color: var(--danger); font-weight: 600;
+      }
+
+      .notice-textarea {
+        width: 100%; min-height: 80px; resize: vertical;
+        padding: 11px 13px; font-size: 0.92rem; font-family: inherit;
+        background: var(--surface-muted); border: 1px solid var(--border);
+        border-radius: 9px; color: var(--text); outline: none;
+        margin-bottom: 0.7rem; line-height: 1.45;
+        transition: border-color 0.15s, background 0.15s;
+      }
+      .notice-textarea:focus {
+        border-color: var(--accent); background: #fff;
+      }
+
+      .notice-chips {
+        display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.95rem;
+      }
+      .notice-chip {
+        padding: 5px 10px; font-size: 0.76rem; font-family: inherit; font-weight: 500;
+        background: var(--surface-muted); border: 1px solid var(--border);
+        border-radius: 99px; color: var(--text); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .notice-chip:hover {
+        background: var(--accent-soft); border-color: #d6c3a8;
+      }
+
+      .notice-duration-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px; margin-bottom: 1rem;
+      }
+      .notice-duration-label {
+        font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;
+      }
+      .notice-duration-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+      .dur-pill {
+        padding: 5px 9px; font-size: 0.76rem; font-family: inherit; font-weight: 500;
+        background: var(--surface-muted); border: 1px solid var(--border);
+        border-radius: 6px; color: var(--text-muted); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+      .dur-pill.selected {
+        background: var(--accent-soft); border-color: var(--accent); color: var(--accent);
+      }
+
+      .active-notice-box {
+        display: none; margin-top: 0.9rem; padding: 12px 14px;
+        border-radius: 9px; background: var(--accent-soft);
+        border: 1px solid #dfd0ba; text-align: left;
+      }
+      .active-notice-box.visible { display: block; }
+      .active-notice-box.is-alert {
+        background: #fdf2f2; border-color: #ebc2c2;
+      }
+      .active-notice-head {
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 0.75rem; font-weight: 600; color: var(--accent); margin-bottom: 0.35rem;
+      }
+      .active-notice-box.is-alert .active-notice-head { color: var(--danger); }
+      .active-notice-text {
+        font-size: 0.9rem; color: var(--text); line-height: 1.4;
+        margin-bottom: 0.7rem; word-break: break-word;
+      }
+      .clear-notice-btn {
+        width: 100%; padding: 8px 10px; font-size: 0.8rem;
+        font-family: inherit; font-weight: 500;
+        background: #fff; border: 1px solid #e7c2c2;
+        border-radius: 7px; color: var(--danger); cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .clear-notice-btn:hover {
+        background: #fdf4f4; border-color: var(--danger);
       }
 
       /* Toast */
       .toast {
-        position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(20px);
-        background: rgba(255,253,246,0.96); border: 1px solid var(--card-border);
-        border-radius: 10px; padding: 12px 20px;
-        font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
-        box-shadow: 0 6px 24px rgba(43,32,19,0.12);
-        color: var(--text-muted); opacity: 0; transition: opacity 0.3s, transform 0.3s;
+        position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(16px);
+        background: #1c1917; border-radius: 9px; padding: 10px 16px;
+        font-size: 0.82rem; font-weight: 500;
+        box-shadow: 0 8px 24px rgba(28, 25, 23, 0.18);
+        color: #fff; opacity: 0; transition: opacity 0.25s, transform 0.25s;
         pointer-events: none; white-space: nowrap; z-index: 100;
       }
       .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-      .toast.success { border-color: rgba(82,224,122,0.4); color: var(--success); }
-      .toast.error   { border-color: rgba(224,82,82,0.4);  color: var(--danger);  }
+      .toast.success { background: #1e6b48; }
+      .toast.error   { background: #b52f2f; }
 
       /* Current state preview */
       .current-state {
-        text-align: center; padding: 0.75rem;
-        font-size: 0.68rem; color: var(--text-muted); letter-spacing: 0.08em;
-        text-transform: uppercase;
+        text-align: center; padding: 0.5rem;
+        font-size: 0.8rem; color: var(--text-muted);
       }
-      .current-state span { color: var(--gold-light); }
+      .current-state span { color: var(--text); font-weight: 600; }
 
-      /* ── Live timer card ── */
+      /* Live timer card */
       .live-card {
-        display: none; background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: var(--radius); padding: 1.5rem 1.75rem;
-        margin-bottom: 1rem; text-align: center; transition: border-color 0.6s ease;
+        display: none; background: var(--surface); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 1.25rem;
+        box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04);
+        margin-bottom: 1rem; text-align: center; transition: border-color 0.4s ease;
       }
       .live-card.visible { display: block; }
       .live-card-label {
-        font-size: 0.65rem; font-weight: 500; letter-spacing: 0.14em;
-        text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem;
-        display: flex; align-items: center; gap: 8px;
+        font-size: 0.78rem; font-weight: 600; color: var(--text-muted);
+        margin-bottom: 0.65rem; text-align: left;
       }
-      .live-card-label::after { content: ""; flex: 1; height: 1px; background: var(--card-border); }
       .live-time {
-        font-family: "Cinzel", serif; font-size: 3.25rem; font-weight: 400;
-        color: var(--text); letter-spacing: 0.05em; line-height: 1;
-        margin-bottom: 0.35rem; transition: color 0.5s;
+        font-family: "Barlow", sans-serif; font-size: 3rem; font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--text); letter-spacing: -0.02em; line-height: 1.05;
+        margin-bottom: 0.3rem; transition: color 0.4s;
       }
-      .live-time.expired { color: var(--danger); font-size: 1rem; letter-spacing: 0.14em; }
+      .live-time.expired { color: var(--danger); font-size: 1.2rem; letter-spacing: 0.02em; }
       .live-overtime {
-        display: none; font-size: 0.72rem; color: var(--danger);
-        letter-spacing: 0.06em; margin-bottom: 0.6rem;
-        animation: ctrlpulse 1.5s ease-in-out infinite;
+        display: none; font-size: 0.82rem; font-weight: 500; color: var(--danger);
+        margin-bottom: 0.5rem;
       }
-      @keyframes ctrlpulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
       .live-overtime.show { display: block; }
       .live-bar-bg {
-        background: rgba(168,124,63,0.15); border-radius: 99px;
-        height: 4px; overflow: hidden; margin: 0.85rem 0 0.5rem;
+        background: #ebe7df; border-radius: 99px;
+        height: 6px; overflow: hidden; margin: 0.75rem 0 0.55rem;
       }
       .live-bar-fill {
-        height: 100%; border-radius: 99px; background: var(--gold);
-        transition: width 1s linear, background 0.8s ease; width: 100%;
+        height: 100%; border-radius: 99px; background: var(--accent);
+        transition: width 1s linear, background 0.6s ease; width: 100%;
       }
       .live-stats {
         display: flex; justify-content: space-between;
-        font-size: 0.63rem; color: var(--text-muted);
-        letter-spacing: 0.07em; text-transform: uppercase;
+        font-size: 0.76rem; color: var(--text-muted);
+        font-variant-numeric: tabular-nums;
       }
 
+      /* PIN Gate */
       #pinGate {
         position: fixed; inset: 0; z-index: 200;
         display: flex; align-items: center; justify-content: center;
-        padding: 1.5rem;
-        background: #f5efe0;
-        background-image:
-          radial-gradient(ellipse at 20% 20%, rgba(168,124,63,0.10) 0%, transparent 60%),
-          radial-gradient(ellipse at 80% 80%, rgba(150,120,200,0.06) 0%, transparent 60%);
+        padding: 1.5rem; background: var(--bg);
       }
       #pinGate.hidden { display: none; }
 
       .pin-card {
-        background: var(--card-bg); border: 1px solid var(--card-border);
-        border-radius: var(--radius); padding: 2.5rem 2.25rem;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 14px; padding: 2rem 1.75rem;
         width: 100%; max-width: 340px; text-align: center;
-        box-shadow: 0 0 80px rgba(200,169,110,0.07), inset 0 1px 0 rgba(200,169,110,0.1);
+        box-shadow: 0 4px 16px rgba(28, 25, 23, 0.06);
       }
-      .pin-crown { font-size: 1.4rem; margin-bottom: 0.6rem; opacity: 0.75; }
       .pin-title {
-        font-family: "Cinzel", serif; font-size: 0.95rem; font-weight: 700;
-        letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold);
-        margin-bottom: 0.25rem;
+        font-family: "Barlow", sans-serif; font-size: 1.25rem; font-weight: 600;
+        color: var(--text); margin-bottom: 0.25rem;
       }
       .pin-sub {
-        font-size: 0.63rem; color: var(--text-muted);
-        letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 2rem;
+        font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;
       }
 
       /* PIN dots */
       .pin-dots {
-        display: flex; gap: 14px; justify-content: center; margin-bottom: 1.75rem;
+        display: flex; gap: 12px; justify-content: center; margin-bottom: 1.5rem;
       }
       .pin-dot {
-        width: 14px; height: 14px; border-radius: 50%;
-        border: 1.5px solid rgba(200,169,110,0.35);
-        background: transparent; transition: background 0.2s, border-color 0.2s;
+        width: 12px; height: 12px; border-radius: 50%;
+        border: 1.5px solid #cbc5b9;
+        background: transparent; transition: background 0.15s, border-color 0.15s;
       }
-      .pin-dot.filled { background: var(--gold); border-color: var(--gold); }
+      .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
       .pin-dot.error  { background: var(--danger); border-color: var(--danger); }
 
       /* PIN keypad */
       .pin-keypad {
         display: grid; grid-template-columns: repeat(3, 1fr);
-        gap: 10px; margin-bottom: 1rem;
+        gap: 8px; margin-bottom: 0.85rem;
       }
       .pin-key {
-        padding: 16px 8px; font-size: 1.2rem; font-family: "Cinzel", serif;
-        font-weight: 400; background: rgba(168,124,63,0.09);
-        border: 1px solid var(--card-border); border-radius: 10px;
+        padding: 14px 8px; font-size: 1.2rem; font-family: "Barlow", sans-serif;
+        font-weight: 500; background: var(--surface-muted);
+        border: 1px solid var(--border); border-radius: 9px;
         color: var(--text); cursor: pointer;
         transition: background 0.12s, transform 0.1s;
         user-select: none;
       }
-      .pin-key:hover  { background: rgba(200,169,110,0.13); }
-      .pin-key:active { transform: scale(0.93); background: rgba(200,169,110,0.18); }
+      .pin-key:hover  { background: var(--accent-soft); }
+      .pin-key:active { transform: scale(0.96); }
       .pin-key.del    { font-size: 1rem; color: var(--text-muted); }
       .pin-key.go {
-        background: linear-gradient(135deg, #b8955a, #d4aa72, #b8955a);
-        color: #1a0f00; border: none; font-size: 0.75rem;
-        letter-spacing: 0.1em; font-family: "Inter", sans-serif; font-weight: 600;
+        background: var(--accent); color: #fff; border: none;
+        font-size: 0.88rem; font-family: inherit; font-weight: 600;
       }
-      .pin-key.go:hover { opacity: 0.9; }
+      .pin-key.go:hover { background: var(--accent-hover); }
 
       .pin-error {
-        font-size: 0.68rem; color: var(--danger); letter-spacing: 0.08em;
+        font-size: 0.8rem; color: var(--danger);
         min-height: 1.2em; margin-top: 0.25rem;
         animation: pinshake 0.35s ease;
       }
@@ -292,23 +371,12 @@
         0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
         60%{transform:translateX(6px)}  80%{transform:translateX(-3px)}
       }
-
-      /* Lock icon in header when authenticated */
-      .lock-badge {
-        display: none; position: absolute; top: 1rem; right: 1.25rem;
-        font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em;
-        cursor: pointer; padding: 5px 10px;
-        border: 1px solid var(--card-border); border-radius: 20px;
-        transition: color 0.2s, border-color 0.2s;
-      }
-      .lock-badge:hover { color: var(--danger); border-color: rgba(224,82,82,0.4); }
     </style>
   </head>
   <body>
     <!-- PIN Gate — covers everything until unlocked -->
     <div id="pinGate">
       <div class="pin-card">
-        <div class="pin-crown">✦</div>
         <div class="pin-title">Advancement Timer</div>
         <div class="pin-sub">Enter PIN to continue</div>
 
@@ -338,16 +406,13 @@
       </div>
     </div>
 
-    <!-- Lock/logout badge shown when authenticated -->
-    <div class="lock-badge" id="lockBadge" onclick="pinLock()" title="Lock controls">
-      🔒 Lock
-    </div>
-
     <div class="page">
-      <div class="page-header">
-        <div class="crown">✦</div>
-        <div class="page-title">Advancement Timer</div>
-        <div class="page-sub">Remote Control</div>
+      <div class="topbar">
+        <div class="page-header">
+          <div class="page-title">Advancement Timer</div>
+          <div class="page-sub">Remote control</div>
+        </div>
+        <button type="button" class="lock-badge" id="lockBadge" onclick="pinLock()" title="Lock controls">Lock</button>
       </div>
 
       <!-- Connection status -->
@@ -361,7 +426,7 @@
 
       <!-- Live remaining time — shown when a timer is active -->
       <div class="live-card" id="liveCard">
-        <div class="live-card-label">Screen Timer — Live</div>
+        <div class="live-card-label">On screen now</div>
         <div class="live-time" id="liveTime">00:00:00</div>
         <div class="live-overtime" id="liveOvertime"></div>
         <div class="live-bar-bg">
@@ -375,7 +440,7 @@
 
       <!-- Main control card -->
       <div class="card">
-        <div class="card-label">Set Duration</div>
+        <div class="card-label">Set duration</div>
 
         <div class="duration-wrap">
           <input type="number" class="duration-input" id="minutesInput" placeholder="45" min="1" max="600" />
@@ -383,21 +448,61 @@
         </div>
 
         <div class="presets">
-          <button class="preset" onclick="setPreset(5)">5 min</button>
-          <button class="preset" onclick="setPreset(10)">10 min</button>
-          <button class="preset" onclick="setPreset(15)">15 min</button>
-          <button class="preset" onclick="setPreset(30)">30 min</button>
-          <button class="preset" onclick="setPreset(50)">50 min</button>
-          <button class="preset" onclick="setPreset(60)">1 hour</button>
+          <button class="preset" onclick="setPreset(5, this)">5 min</button>
+          <button class="preset" onclick="setPreset(10, this)">10 min</button>
+          <button class="preset" onclick="setPreset(15, this)">15 min</button>
+          <button class="preset" onclick="setPreset(30, this)">30 min</button>
+          <button class="preset" onclick="setPreset(50, this)">50 min</button>
+          <button class="preset" onclick="setPreset(60, this)">1 hour</button>
         </div>
 
-        <button class="send-btn" id="sendBtn" onclick="sendStart()">▶ Start Timer on Screen</button>
+        <button class="send-btn" id="sendBtn" onclick="sendStart()">Start timer</button>
+      </div>
+
+      <!-- Notice / Alert card -->
+      <div class="card">
+        <div class="card-label">Screen notice</div>
+
+        <div class="notice-type-row">
+          <button type="button" class="notice-type-btn active notice" id="typeNoticeBtn" onclick="setNoticeType('notice')">Notice</button>
+          <button type="button" class="notice-type-btn alert" id="typeAlertBtn" onclick="setNoticeType('alert')">Alert</button>
+        </div>
+
+        <textarea class="notice-textarea" id="noticeInput" maxlength="240" placeholder="Type a message to display full-screen…"></textarea>
+
+        <div class="notice-chips">
+          <button type="button" class="notice-chip" onclick="setNoticePreset('Please wrap up soon')">Wrap up soon</button>
+          <button type="button" class="notice-chip" onclick="setNoticePreset('5 minutes remaining')">5 min left</button>
+          <button type="button" class="notice-chip" onclick="setNoticePreset('Next speaker is ready')">Next speaker ready</button>
+          <button type="button" class="notice-chip" onclick="setNoticePreset('Time is up — please conclude')">Please conclude</button>
+        </div>
+
+        <div class="notice-duration-row">
+          <span class="notice-duration-label">Display for</span>
+          <div class="notice-duration-pills">
+            <button type="button" class="dur-pill selected" onclick="setNoticeDuration(0, this)">Until cleared</button>
+            <button type="button" class="dur-pill" onclick="setNoticeDuration(15, this)">15s</button>
+            <button type="button" class="dur-pill" onclick="setNoticeDuration(30, this)">30s</button>
+            <button type="button" class="dur-pill" onclick="setNoticeDuration(60, this)">60s</button>
+          </div>
+        </div>
+
+        <button class="send-btn" id="sendNoticeBtn" onclick="sendNotice()">Send notice</button>
+
+        <div class="active-notice-box" id="activeNoticeBox">
+          <div class="active-notice-head">
+            <span id="activeNoticeTypeLabel">Showing on screen</span>
+            <span id="activeNoticeTimer"></span>
+          </div>
+          <div class="active-notice-text" id="activeNoticeText"></div>
+          <button type="button" class="clear-notice-btn" onclick="clearNotice()">Clear notice</button>
+        </div>
       </div>
 
       <!-- Reset card -->
       <div class="card">
-        <div class="card-label">Controls</div>
-        <button class="reset-btn" onclick="sendReset()">↺ Reset Timer on Screen</button>
+        <div class="card-label">Screen controls</div>
+        <button class="reset-btn" onclick="sendReset()">Reset timer on screen</button>
       </div>
 
       <div class="current-state" id="currentState">Waiting for server…</div>
@@ -504,6 +609,8 @@
         sessionPin = '';
         sessionStorage.removeItem(SESSION_KEY);
         if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        if (liveInterval) { clearInterval(liveInterval); liveInterval = null; }
+        if (noticeTimer)  { clearInterval(noticeTimer);  noticeTimer  = null; }
         pinBuffer = '';
         updateDots();
         clearPinError();
@@ -544,10 +651,10 @@
       // ════════════════════════════════════════════
       // PRESETS
       // ════════════════════════════════════════════
-      function setPreset(m) {
+      function setPreset(m, el) {
         document.getElementById('minutesInput').value = m;
         document.querySelectorAll('.preset').forEach(b => b.classList.remove('selected'));
-        event.target.classList.add('selected');
+        if (el) el.classList.add('selected');
       }
 
       document.getElementById('minutesInput').addEventListener('input', () => {
@@ -557,6 +664,9 @@
       // ════════════════════════════════════════════
       // TIMER COMMANDS
       // ════════════════════════════════════════════
+      let clockOffsetMs = 0;
+      function getNowMs() { return Date.now() + clockOffsetMs; }
+
       async function sendStart() {
         const val = parseInt(document.getElementById('minutesInput').value);
         if (!val || val < 1 || val > 600) {
@@ -579,8 +689,12 @@
           if (res.status === 401) { pinLock(); return; }
 
           if (data.ok) {
-            showToast(`▶ ${val} min timer sent to screen`, 'success');
+            if (data.state && data.state.serverTime) {
+              clockOffsetMs = data.state.serverTime * 1000 - Date.now();
+            }
+            showToast(`${val} min timer started`, 'success');
             applyLiveState(data.state);
+            applyNoticeState(data.state ? data.state.notice : null);
           } else {
             showToast('Error: ' + (data.error || 'Unknown'), 'error');
           }
@@ -588,7 +702,7 @@
           showToast('Could not reach server', 'error');
         } finally {
           btn.disabled = false;
-          btn.textContent = '▶ Start Timer on Screen';
+          btn.textContent = 'Start timer';
         }
       }
 
@@ -604,14 +718,158 @@
           if (res.status === 401) { pinLock(); return; }
 
           if (data.ok) {
-            showToast('↺ Reset sent to screen', 'success');
+            showToast('Screen reset', 'success');
             hideLiveCard();
+            applyNoticeState(null);
           } else {
             showToast('Error: ' + (data.error || 'Unknown'), 'error');
           }
         } catch (e) {
           showToast('Could not reach server', 'error');
         }
+      }
+
+      // ════════════════════════════════════════════
+      // NOTICE / ALERT CONTROLS
+      // ════════════════════════════════════════════
+      let noticeType     = 'notice';
+      let noticeDuration = 0;
+      let activeNotice   = null;
+      let noticeTimer    = null;
+
+      function setNoticeType(type) {
+        noticeType = type === 'alert' ? 'alert' : 'notice';
+        document.getElementById('typeNoticeBtn').classList.toggle('active', noticeType === 'notice');
+        document.getElementById('typeAlertBtn').classList.toggle('active', noticeType === 'alert');
+        const btn = document.getElementById('sendNoticeBtn');
+        btn.classList.toggle('alert-style', noticeType === 'alert');
+        btn.textContent = noticeType === 'alert' ? 'Send alert' : 'Send notice';
+      }
+
+      function setNoticePreset(msg) {
+        const input = document.getElementById('noticeInput');
+        input.value = msg;
+        input.focus();
+      }
+
+      function setNoticeDuration(sec, el) {
+        noticeDuration = sec;
+        document.querySelectorAll('.dur-pill').forEach(b => b.classList.remove('selected'));
+        if (el) el.classList.add('selected');
+      }
+
+      async function sendNotice() {
+        const input   = document.getElementById('noticeInput');
+        const message = input.value.trim();
+        if (!message) {
+          showToast('Enter a notice or alert message', 'error');
+          input.focus();
+          return;
+        }
+
+        const btn = document.getElementById('sendNoticeBtn');
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+
+        try {
+          const res = await fetch(STATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              command: 'send-notice',
+              message,
+              type: noticeType,
+              duration: noticeDuration,
+              pin: sessionPin
+            })
+          });
+          const data = await res.json();
+
+          if (res.status === 401) { pinLock(); return; }
+
+          if (data.ok) {
+            if (data.state && data.state.serverTime) {
+              clockOffsetMs = data.state.serverTime * 1000 - Date.now();
+            }
+            showToast(noticeType === 'alert' ? 'Alert sent to screen' : 'Notice sent to screen', 'success');
+            applyNoticeState(data.state ? data.state.notice : null);
+          } else {
+            showToast('Error: ' + (data.error || 'Unknown'), 'error');
+          }
+        } catch (e) {
+          showToast('Could not reach server', 'error');
+        } finally {
+          btn.disabled = false;
+          setNoticeType(noticeType);
+        }
+      }
+
+      async function clearNotice() {
+        try {
+          const res = await fetch(STATE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: 'clear-notice', pin: sessionPin })
+          });
+          const data = await res.json();
+
+          if (res.status === 401) { pinLock(); return; }
+
+          if (data.ok) {
+            showToast('Notice cleared', 'success');
+            applyNoticeState(null);
+          } else {
+            showToast('Error: ' + (data.error || 'Unknown'), 'error');
+          }
+        } catch (e) {
+          showToast('Could not reach server', 'error');
+        }
+      }
+
+      function applyNoticeState(notice) {
+        if (noticeTimer) { clearInterval(noticeTimer); noticeTimer = null; }
+        const box = document.getElementById('activeNoticeBox');
+
+        if (!notice || !notice.active || !notice.message) {
+          activeNotice = null;
+          box.classList.remove('visible', 'is-alert');
+          return;
+        }
+
+        const expiresAtMs = (notice.duration > 0 && notice.sentAt)
+          ? (notice.sentAt + notice.duration) * 1000
+          : 0;
+        if (expiresAtMs && getNowMs() >= expiresAtMs) {
+          activeNotice = null;
+          box.classList.remove('visible', 'is-alert');
+          return;
+        }
+
+        activeNotice = notice;
+        const isAlert = notice.type === 'alert';
+        box.classList.add('visible');
+        box.classList.toggle('is-alert', isAlert);
+        document.getElementById('activeNoticeTypeLabel').textContent = isAlert ? 'Alert on screen' : 'Notice on screen';
+        document.getElementById('activeNoticeText').textContent = notice.message;
+
+        updateNoticePreviewTimer();
+        if (expiresAtMs) {
+          noticeTimer = setInterval(updateNoticePreviewTimer, 500);
+        }
+      }
+
+      function updateNoticePreviewTimer() {
+        const label = document.getElementById('activeNoticeTimer');
+        if (!activeNotice || !activeNotice.duration || !activeNotice.sentAt) {
+          label.textContent = 'Pinned';
+          return;
+        }
+        const leftMs = (activeNotice.sentAt + activeNotice.duration) * 1000 - getNowMs();
+        if (leftMs <= 0) {
+          applyNoticeState(null);
+          return;
+        }
+        label.textContent = `${Math.ceil(leftMs / 1000)}s left`;
       }
 
       // ════════════════════════════════════════════
@@ -660,7 +918,7 @@
 
         const totalMs  = liveMinutes * 60 * 1000;
         const endMs    = liveSetAt * 1000 + totalMs;
-        const now      = Date.now();
+        const now      = getNowMs();
         const timeLeft = endMs - now;
         const elapsed  = now - liveSetAt * 1000;
 
@@ -674,15 +932,15 @@
 
         if (timeLeft <= 0) {
           timeEl.className   = 'live-time expired';
-          timeEl.textContent = 'TIME HAS EXPIRED';
+          timeEl.textContent = 'Time expired';
           bar.style.width    = '0%';
           bar.style.background   = 'var(--danger)';
-          card.style.borderColor = 'rgba(224,82,82,0.4)';
+          card.style.borderColor = '#e6b8b8';
           const past = Math.abs(timeLeft);
           const pm   = Math.floor(past / 60000);
           const ps   = Math.floor((past % 60000) / 1000);
           overtime.className   = 'live-overtime show';
-          overtime.textContent = pm > 0 ? `${pm} min ${pad(ps)}s past time` : `${pad(ps)}s past time`;
+          overtime.textContent = pm > 0 ? `${pm}m ${pad(ps)}s over` : `${pad(ps)}s over`;
           return;
         }
 
@@ -698,16 +956,16 @@
 
         if (pct <= 10) {
           bar.style.background   = 'var(--danger)';
-          card.style.borderColor = 'rgba(224,82,82,0.35)';
+          card.style.borderColor = '#e6b8b8';
         } else if (pct <= 25) {
           bar.style.background   = 'var(--warn)';
-          card.style.borderColor = 'rgba(224,152,50,0.35)';
+          card.style.borderColor = '#ebd0a4';
         } else if (pct <= 50) {
-          bar.style.background   = '#c8a030';
-          card.style.borderColor = 'rgba(200,160,48,0.3)';
+          bar.style.background   = '#c9932c';
+          card.style.borderColor = '#e6d8bd';
         } else {
-          bar.style.background   = 'var(--gold)';
-          card.style.borderColor = 'var(--card-border)';
+          bar.style.background   = 'var(--accent)';
+          card.style.borderColor = 'var(--border)';
         }
       }
 
@@ -718,6 +976,10 @@
         try {
           const res  = await fetch(STATE_URL + '?t=' + Date.now());
           const data = await res.json();
+
+          if (data.serverTime) {
+            clockOffsetMs = data.serverTime * 1000 - Date.now();
+          }
 
           document.getElementById('statusDot').className    = 'status-dot live';
           document.getElementById('statusText').textContent = 'Connected';
@@ -737,6 +999,7 @@
               : `Screen is <span>idle</span>`;
 
           applyLiveState(data);
+          applyNoticeState(data.notice || null);
 
         } catch (e) {
           document.getElementById('statusDot').className    = 'status-dot error';
@@ -747,6 +1010,13 @@
 
       document.getElementById('minutesInput').addEventListener('keydown', e => {
         if (e.key === 'Enter') sendStart();
+      });
+
+      document.getElementById('noticeInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendNotice();
+        }
       });
     </script>
   </body>
